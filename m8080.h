@@ -40,8 +40,8 @@ enum {
   M8080_RST_6 = 0x0030, M8080_RST_7 = 0x0038,
 };
 
-// prints the instruction in buffer[pc] to stdout and returns it's size
-size_t m8080_disassemble(const uint8_t* const buffer, const size_t pc);
+// prints the instruction in `pos` to stdout and returns it's size
+size_t m8080_disassemble(const m8080* const c, const uint16_t pos);
 
 size_t m8080_step(m8080* const c);
 // when the original 8080 recognizes an interrupt request from an external
@@ -114,351 +114,6 @@ static const uint8_t m8080_parity[] = {
   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1, // e0..ff
 };
 
-size_t m8080_disassemble(const uint8_t* const buffer, const size_t pc) {
-  const uint8_t opcode = buffer[pc];
-  printf("%04zx ", pc);
-
-#define I1(s) printf("%02x       " s "\n", opcode); return 1;
-#define I2(s) printf("%02x %02x    " s "\n", opcode, buffer[pc + 1], buffer[pc + 1]); return 2;
-#define I3(s) printf("%02x %02x %02x " s "\n", opcode, buffer[pc + 1], buffer[pc + 2], buffer[pc + 2], buffer[pc + 1]); return 3;
-  switch(opcode) {
-  // set carry
-  case 0x37: I1("STC");
-
-  // complement carry
-  case 0x3f: I1("CMC");
-
-  // increment register or memory
-  case 0x04: I1("INR    B");
-  case 0x0c: I1("INR    C");
-  case 0x14: I1("INR    D");
-  case 0x1c: I1("INR    E");
-  case 0x24: I1("INR    H");
-  case 0x2c: I1("INR    L");
-  case 0x34: I1("INR    M");
-  case 0x3c: I1("INR    A");
-
-  // decrement register or memory
-  case 0x05: I1("DCR    B");
-  case 0x0d: I1("DCR    C");
-  case 0x15: I1("DCR    D");
-  case 0x1d: I1("DCR    E");
-  case 0x25: I1("DCR    H");
-  case 0x2d: I1("DCR    L");
-  case 0x35: I1("DCR    M");
-  case 0x3d: I1("DCR    A");
-
-  // complement accumulator
-  case 0x2f: I1("CMA");
-
-  // decimal adjust accumulator
-  case 0x27: I1("DAA");
-
-  // no operation instructions
-  case 0x00: I1("NOP");
-  case 0x08: I1("NOP"); // undocumented
-  case 0x10: I1("NOP"); // undocumented
-  case 0x18: I1("NOP"); // undocumented
-  case 0x20: I1("NOP"); // undocumented
-  case 0x28: I1("NOP"); // undocumented
-  case 0x30: I1("NOP"); // undocumented
-  case 0x38: I1("NOP"); // undocumented
-
-  // move
-  case 0x40: I1("MOV    B,B");
-  case 0x41: I1("MOV    B,C");
-  case 0x42: I1("MOV    B,D");
-  case 0x43: I1("MOV    B,E");
-  case 0x44: I1("MOV    B,H");
-  case 0x45: I1("MOV    B,L");
-  case 0x46: I1("MOV    B,M");
-  case 0x47: I1("MOV    B,A");
-  case 0x48: I1("MOV    C,B");
-  case 0x49: I1("MOV    C,C");
-  case 0x4a: I1("MOV    C,D");
-  case 0x4b: I1("MOV    C,E");
-  case 0x4c: I1("MOV    C,H");
-  case 0x4d: I1("MOV    C,L");
-  case 0x4e: I1("MOV    C,M");
-  case 0x4f: I1("MOV    C,A");
-  case 0x50: I1("MOV    D,B");
-  case 0x51: I1("MOV    D,C");
-  case 0x52: I1("MOV    D,D");
-  case 0x53: I1("MOV    D,E");
-  case 0x54: I1("MOV    D,H");
-  case 0x55: I1("MOV    D,L");
-  case 0x56: I1("MOV    D,M");
-  case 0x57: I1("MOV    D,A");
-  case 0x58: I1("MOV    E,B");
-  case 0x59: I1("MOV    E,C");
-  case 0x5a: I1("MOV    E,D");
-  case 0x5b: I1("MOV    E,E");
-  case 0x5c: I1("MOV    E,H");
-  case 0x5d: I1("MOV    E,L");
-  case 0x5e: I1("MOV    E,M");
-  case 0x5f: I1("MOV    E,A");
-  case 0x60: I1("MOV    H,B");
-  case 0x61: I1("MOV    H,C");
-  case 0x62: I1("MOV    H,D");
-  case 0x63: I1("MOV    H,E");
-  case 0x64: I1("MOV    H,H");
-  case 0x65: I1("MOV    H,L");
-  case 0x66: I1("MOV    H,M");
-  case 0x67: I1("MOV    H,A");
-  case 0x68: I1("MOV    L,B");
-  case 0x69: I1("MOV    L,C");
-  case 0x6a: I1("MOV    L,D");
-  case 0x6b: I1("MOV    L,E");
-  case 0x6c: I1("MOV    L,H");
-  case 0x6d: I1("MOV    L,L");
-  case 0x6e: I1("MOV    L,M");
-  case 0x6f: I1("MOV    L,A");
-  case 0x70: I1("MOV    M,B");
-  case 0x71: I1("MOV    M,C");
-  case 0x72: I1("MOV    M,D");
-  case 0x73: I1("MOV    M,E");
-  case 0x74: I1("MOV    M,H");
-  case 0x75: I1("MOV    M,L");
-  case 0x77: I1("MOV    M,A");
-  case 0x78: I1("MOV    A,B");
-  case 0x79: I1("MOV    A,C");
-  case 0x7a: I1("MOV    A,D");
-  case 0x7b: I1("MOV    A,E");
-  case 0x7c: I1("MOV    A,H");
-  case 0x7d: I1("MOV    A,L");
-  case 0x7e: I1("MOV    A,M");
-  case 0x7f: I1("MOV    A,A");
-
-  // store accumulator
-  case 0x02: I1("STAX   B");
-  case 0x12: I1("STAX   D");
-
-  // load accumulator
-  case 0x0a: I1("LDAX   B");
-  case 0x1a: I1("LDAX   D");
-
-  // add register or memory to accumulator
-  case 0x80: I1("ADD    B");
-  case 0x81: I1("ADD    C");
-  case 0x82: I1("ADD    D");
-  case 0x83: I1("ADD    E");
-  case 0x84: I1("ADD    H");
-  case 0x85: I1("ADD    L");
-  case 0x86: I1("ADD    M");
-  case 0x87: I1("ADD    A");
-
-  // add register or memory to accumulator with carry
-  case 0x88: I1("ADC    B");
-  case 0x89: I1("ADC    C");
-  case 0x8a: I1("ADC    D");
-  case 0x8b: I1("ADC    E");
-  case 0x8c: I1("ADC    H");
-  case 0x8d: I1("ADC    L");
-  case 0x8e: I1("ADC    M");
-  case 0x8f: I1("ADC    A");
-
-  // subtract register or memory from accumulator
-  case 0x90: I1("SUB    B");
-  case 0x91: I1("SUB    C");
-  case 0x92: I1("SUB    D");
-  case 0x93: I1("SUB    E");
-  case 0x94: I1("SUB    H");
-  case 0x95: I1("SUB    L");
-  case 0x96: I1("SUB    M");
-  case 0x97: I1("SUB    A");
-
-  // subtract register or memory from accumulator with borrow
-  case 0x98: I1("SBB    B");
-  case 0x99: I1("SBB    C");
-  case 0x9a: I1("SBB    D");
-  case 0x9b: I1("SBB    E");
-  case 0x9c: I1("SBB    H");
-  case 0x9d: I1("SBB    L");
-  case 0x9e: I1("SBB    M");
-  case 0x9f: I1("SBB    A");
-
-  // logical AND register or memory with accumulator
-  case 0xa0: I1("ANA    B");
-  case 0xa1: I1("ANA    C");
-  case 0xa2: I1("ANA    D");
-  case 0xa3: I1("ANA    E");
-  case 0xa4: I1("ANA    H");
-  case 0xa5: I1("ANA    L");
-  case 0xa6: I1("ANA    M");
-  case 0xa7: I1("ANA    A");
-
-  // logical XOR register or memory with accumulator
-  case 0xa8: I1("XRA    B");
-  case 0xa9: I1("XRA    C");
-  case 0xaa: I1("XRA    D");
-  case 0xab: I1("XRA    E");
-  case 0xac: I1("XRA    H");
-  case 0xad: I1("XRA    L");
-  case 0xae: I1("XRA    M");
-  case 0xaf: I1("XRA    A");
-
-  // logical OR register or memory with accumulator
-  case 0xb0: I1("ORA    B");
-  case 0xb1: I1("ORA    C");
-  case 0xb2: I1("ORA    D");
-  case 0xb3: I1("ORA    E");
-  case 0xb4: I1("ORA    H");
-  case 0xb5: I1("ORA    L");
-  case 0xb6: I1("ORA    M");
-  case 0xb7: I1("ORA    A");
-
-  // compare register or memory with accumulator
-  case 0xb8: I1("CMP    B");
-  case 0xb9: I1("CMP    C");
-  case 0xba: I1("CMP    D");
-  case 0xbb: I1("CMP    E");
-  case 0xbc: I1("CMP    H");
-  case 0xbd: I1("CMP    L");
-  case 0xbe: I1("CMP    M");
-  case 0xbf: I1("CMP    A");
-
-  // rotate accumulator instructions
-  case 0x07: I1("RLC");
-  case 0x0f: I1("RRC");
-  case 0x17: I1("RAL");
-  case 0x1f: I1("RAR");
-
-  // push data onto stack
-  case 0xc5: I1("PUSH   B");
-  case 0xd5: I1("PUSH   D");
-  case 0xe5: I1("PUSH   H");
-  case 0xf5: I1("PUSH   PSW");
-
-  // pop data off stack
-  case 0xc1: I1("POP    B");
-  case 0xd1: I1("POP    D");
-  case 0xe1: I1("POP    H");
-  case 0xf1: I1("POP    PSW");
-
-  // double add
-  case 0x09: I1("DAD    B");
-  case 0x19: I1("DAD    D");
-  case 0x29: I1("DAD    H");
-  case 0x39: I1("DAD    SP");
-
-  // increment register pair
-  case 0x03: I1("INX    B");
-  case 0x13: I1("INX    D");
-  case 0x23: I1("INX    H");
-  case 0x33: I1("INX    SP");
-
-  // decrement register pair
-  case 0x0b: I1("DCX    B");
-  case 0x1b: I1("DCX    D");
-  case 0x2b: I1("DCX    H");
-  case 0x3b: I1("DCX    SP");
-
-  // exchange registers
-  case 0xeb: I1("XCHG");
-  case 0xe3: I1("XTHL");
-  case 0xf9: I1("SPHL");
-
-  // move immediate word
-  case 0x01: I3("LXI    B,%02x%02x");
-  case 0x11: I3("LXI    D,%02x%02x");
-  case 0x21: I3("LXI    H,%02x%02x");
-  case 0x31: I3("LXI    SP,%02x%02x");
-
-  // move immediate byte
-  case 0x06: I2("MVI    B,%02x");
-  case 0x0e: I2("MVI    C,%02x");
-  case 0x16: I2("MVI    D,%02x");
-  case 0x1e: I2("MVI    E,%02x");
-  case 0x26: I2("MVI    H,%02x");
-  case 0x2e: I2("MVI    L,%02x");
-  case 0x36: I2("MVI    M,%02x");
-  case 0x3e: I2("MVI    A,%02x");
-
-  // immediate instructions
-  case 0xc6: I2("ADI    %02x");
-  case 0xce: I2("ACI    %02x");
-  case 0xd6: I2("SUI    %02x");
-  case 0xde: I2("SBI    %02x");
-  case 0xe6: I2("ANI    %02x");
-  case 0xee: I2("XRI    %02x");
-  case 0xf6: I2("ORI    %02x");
-  case 0xfe: I2("CPI    %02x");
-
-  // store/load accumulator direct
-  case 0x32: I3("STA    %02x%02x");
-  case 0x3a: I3("LDA    %02x%02x");
-
-  // store/load HL direct
-  case 0x22: I3("SHLD   %02x%02x");
-  case 0x2a: I3("LHLD   %02x%02x");
-
-  // load program counter
-  case 0xe9: I1("PCHL");
-
-  // jump instructions
-  case 0xc3: I3("JMP    %02x%02x");
-  case 0xcb: I3("JMP    %02x%02x"); // undocumented
-  case 0xda: I3("JC     %02x%02x");
-  case 0xd2: I3("JNC    %02x%02x");
-  case 0xca: I3("JZ     %02x%02x");
-  case 0xc2: I3("JNZ    %02x%02x");
-  case 0xfa: I3("JM     %02x%02x");
-  case 0xf2: I3("JP     %02x%02x");
-  case 0xea: I3("JPE    %02x%02x");
-  case 0xe2: I3("JPO    %02x%02x");
-
-  // call subroutine instructions
-  case 0xcd: I3("CALL   %02x%02x");
-  case 0xdd: I3("CALL   %02x%02x"); // undocumented
-  case 0xed: I3("CALL   %02x%02x"); // undocumented
-  case 0xfd: I3("CALL   %02x%02x"); // undocumented
-  case 0xdc: I3("CC     %02x%02x");
-  case 0xd4: I3("CNC    %02x%02x");
-  case 0xcc: I3("CZ     %02x%02x");
-  case 0xc4: I3("CNZ    %02x%02x");
-  case 0xfc: I3("CM     %02x%02x");
-  case 0xf4: I3("CP     %02x%02x");
-  case 0xec: I3("CPE    %02x%02x");
-  case 0xe4: I3("CPO    %02x%02x");
-
-  // return from subroutine instructions
-  case 0xc9: I1("RET");
-  case 0xd9: I1("RET"); // undocumented
-  case 0xd8: I1("RC");
-  case 0xd0: I1("RNC");
-  case 0xc8: I1("RZ");
-  case 0xc0: I1("RNZ");
-  case 0xf8: I1("RM");
-  case 0xf0: I1("RP");
-  case 0xe8: I1("RPE");
-  case 0xe0: I1("RPO");
-
-  // restart instructions
-  case 0xc7: I1("RST    0");
-  case 0xcf: I1("RST    1");
-  case 0xd7: I1("RST    2");
-  case 0xdf: I1("RST    3");
-  case 0xe7: I1("RST    4");
-  case 0xef: I1("RST    5");
-  case 0xf7: I1("RST    6");
-  case 0xff: I1("RST    7");
-
-  // interrupt flip-flop instructions
-  case 0xfb: I1("EI");
-  case 0xf3: I1("DI");
-
-  // input/output instructions
-  case 0xdb: I2("IN     %02x");
-  case 0xd3: I2("OUT    %02x");
-
-  // halt instruction
-  case 0x76: I1("HLT");
-  }
-#undef I1
-#undef I2
-#undef I3
-}
-
 // read word
 static inline uint16_t m8080_rw(const m8080* const c, const uint16_t a) {
   return m8080_rb(c, a + 1) << 8 | m8080_rb(c, a);
@@ -469,6 +124,353 @@ static inline uint16_t m8080_ww(m8080* const c, const uint16_t a, const uint16_t
   m8080_wb(c, a + 0, w);
   m8080_wb(c, a + 1, w >> 8);
   return m8080_rw(c, a);
+}
+
+size_t m8080_disassemble(const m8080* const c, const uint16_t pos) {
+  const uint8_t opcode = m8080_rb(c, pos);
+  const uint8_t byte = m8080_rb(c, pos + 1);
+  const uint16_t word = m8080_rw(c, pos + 1);
+  printf("| 0x%04x\t", pos);
+
+#define I1(s) printf("%02x        " s "\n", opcode); return 1;
+#define I2(s) printf("%02x%02x      " s "\n", opcode, m8080_rb(c, pos + 1), byte); return 2;
+#define I3(s) printf("%02x%02x%02x    " s "\n", opcode, m8080_rb(c, pos + 1), m8080_rb(c, pos + 2), word); return 3;
+  switch(opcode) {
+  // set carry
+  case 0x37: I1("stc");
+
+  // complement carry
+  case 0x3f: I1("cmc");
+
+  // increment register or memory
+  case 0x04: I1("inr b");
+  case 0x0c: I1("inr c");
+  case 0x14: I1("inr d");
+  case 0x1c: I1("inr e");
+  case 0x24: I1("inr h");
+  case 0x2c: I1("inr l");
+  case 0x34: I1("inr [hl]");
+  case 0x3c: I1("inr a");
+
+  // decrement register or memory
+  case 0x05: I1("dcr b");
+  case 0x0d: I1("dcr c");
+  case 0x15: I1("dcr d");
+  case 0x1d: I1("dcr e");
+  case 0x25: I1("dcr h");
+  case 0x2d: I1("dcr l");
+  case 0x35: I1("dcr [hl]");
+  case 0x3d: I1("dcr a");
+
+  // complement accumulator
+  case 0x2f: I1("cma");
+
+  // decimal adjust accumulator
+  case 0x27: I1("daa");
+
+  // no operation instructions
+  case 0x00: I1("nop");
+  case 0x08: I1("nop"); // undocumented
+  case 0x10: I1("nop"); // undocumented
+  case 0x18: I1("nop"); // undocumented
+  case 0x20: I1("nop"); // undocumented
+  case 0x28: I1("nop"); // undocumented
+  case 0x30: I1("nop"); // undocumented
+  case 0x38: I1("nop"); // undocumented
+
+  // move
+  case 0x40: I1("mov b, b");
+  case 0x41: I1("mov b, c");
+  case 0x42: I1("mov b, d");
+  case 0x43: I1("mov b, e");
+  case 0x44: I1("mov b, h");
+  case 0x45: I1("mov b, l");
+  case 0x46: I1("mov b, [hl]");
+  case 0x47: I1("mov b, a");
+  case 0x48: I1("mov c, b");
+  case 0x49: I1("mov c, c");
+  case 0x4a: I1("mov c, d");
+  case 0x4b: I1("mov c, e");
+  case 0x4c: I1("mov c, h");
+  case 0x4d: I1("mov c, l");
+  case 0x4e: I1("mov c, [hl]");
+  case 0x4f: I1("mov c, a");
+  case 0x50: I1("mov d, b");
+  case 0x51: I1("mov d, c");
+  case 0x52: I1("mov d, d");
+  case 0x53: I1("mov d, e");
+  case 0x54: I1("mov d, h");
+  case 0x55: I1("mov d, l");
+  case 0x56: I1("mov d, [hl]");
+  case 0x57: I1("mov d, a");
+  case 0x58: I1("mov e, b");
+  case 0x59: I1("mov e, c");
+  case 0x5a: I1("mov e, d");
+  case 0x5b: I1("mov e, e");
+  case 0x5c: I1("mov e, h");
+  case 0x5d: I1("mov e, l");
+  case 0x5e: I1("mov e, [hl]");
+  case 0x5f: I1("mov e, a");
+  case 0x60: I1("mov h, b");
+  case 0x61: I1("mov h, c");
+  case 0x62: I1("mov h, d");
+  case 0x63: I1("mov h, e");
+  case 0x64: I1("mov h, h");
+  case 0x65: I1("mov h, l");
+  case 0x66: I1("mov h, [hl]");
+  case 0x67: I1("mov h, a");
+  case 0x68: I1("mov l, b");
+  case 0x69: I1("mov l, c");
+  case 0x6a: I1("mov l, d");
+  case 0x6b: I1("mov l, e");
+  case 0x6c: I1("mov l, h");
+  case 0x6d: I1("mov l, l");
+  case 0x6e: I1("mov l, [hl]");
+  case 0x6f: I1("mov l, a");
+  case 0x70: I1("mov [hl], b");
+  case 0x71: I1("mov [hl], c");
+  case 0x72: I1("mov [hl], d");
+  case 0x73: I1("mov [hl], e");
+  case 0x74: I1("mov [hl], h");
+  case 0x75: I1("mov [hl], l");
+  case 0x77: I1("mov [hl], a");
+  case 0x78: I1("mov a, b");
+  case 0x79: I1("mov a, c");
+  case 0x7a: I1("mov a, d");
+  case 0x7b: I1("mov a, e");
+  case 0x7c: I1("mov a, h");
+  case 0x7d: I1("mov a, l");
+  case 0x7e: I1("mov a, [hl]");
+  case 0x7f: I1("mov a, a");
+
+  // store accumulator
+  case 0x02: I1("stax b");
+  case 0x12: I1("stax d");
+
+  // load accumulator
+  case 0x0a: I1("ldax b");
+  case 0x1a: I1("ldax d");
+
+  // add register or memory to accumulator
+  case 0x80: I1("add b");
+  case 0x81: I1("add c");
+  case 0x82: I1("add d");
+  case 0x83: I1("add e");
+  case 0x84: I1("add h");
+  case 0x85: I1("add l");
+  case 0x86: I1("add [hl]");
+  case 0x87: I1("add a");
+
+  // add register or memory to accumulator with carry
+  case 0x88: I1("adc b");
+  case 0x89: I1("adc c");
+  case 0x8a: I1("adc d");
+  case 0x8b: I1("adc e");
+  case 0x8c: I1("adc h");
+  case 0x8d: I1("adc l");
+  case 0x8e: I1("adc [hl]");
+  case 0x8f: I1("adc a");
+
+  // subtract register or memory from accumulator
+  case 0x90: I1("sub b");
+  case 0x91: I1("sub c");
+  case 0x92: I1("sub d");
+  case 0x93: I1("sub e");
+  case 0x94: I1("sub h");
+  case 0x95: I1("sub l");
+  case 0x96: I1("sub [hl]");
+  case 0x97: I1("sub a");
+
+  // subtract register or memory from accumulator with borrow
+  case 0x98: I1("sbb b");
+  case 0x99: I1("sbb c");
+  case 0x9a: I1("sbb d");
+  case 0x9b: I1("sbb e");
+  case 0x9c: I1("sbb h");
+  case 0x9d: I1("sbb l");
+  case 0x9e: I1("sbb [hl]");
+  case 0x9f: I1("sbb a");
+
+  // logical AND register or memory with accumulator
+  case 0xa0: I1("ana b");
+  case 0xa1: I1("ana c");
+  case 0xa2: I1("ana d");
+  case 0xa3: I1("ana e");
+  case 0xa4: I1("ana h");
+  case 0xa5: I1("ana l");
+  case 0xa6: I1("ana [hl]");
+  case 0xa7: I1("ana a");
+
+  // logical XOR register or memory with accumulator
+  case 0xa8: I1("xra b");
+  case 0xa9: I1("xra c");
+  case 0xaa: I1("xra d");
+  case 0xab: I1("xra e");
+  case 0xac: I1("xra h");
+  case 0xad: I1("xra l");
+  case 0xae: I1("xra [hl]");
+  case 0xaf: I1("xra a");
+
+  // logical OR register or memory with accumulator
+  case 0xb0: I1("ora b");
+  case 0xb1: I1("ora c");
+  case 0xb2: I1("ora d");
+  case 0xb3: I1("ora e");
+  case 0xb4: I1("ora h");
+  case 0xb5: I1("ora l");
+  case 0xb6: I1("ora [hl]");
+  case 0xb7: I1("ora a");
+
+  // compare register or memory with accumulator
+  case 0xb8: I1("cmp b");
+  case 0xb9: I1("cmp c");
+  case 0xba: I1("cmp d");
+  case 0xbb: I1("cmp e");
+  case 0xbc: I1("cmp h");
+  case 0xbd: I1("cmp l");
+  case 0xbe: I1("cmp [hl]");
+  case 0xbf: I1("cmp a");
+
+  // rotate accumulator instructions
+  case 0x07: I1("rlc");
+  case 0x0f: I1("rrc");
+  case 0x17: I1("ral");
+  case 0x1f: I1("rar");
+
+  // push data onto stack
+  case 0xc5: I1("push b");
+  case 0xd5: I1("push d");
+  case 0xe5: I1("push h");
+  case 0xf5: I1("push psw");
+
+  // pop data off stack
+  case 0xc1: I1("pop b");
+  case 0xd1: I1("pop d");
+  case 0xe1: I1("pop h");
+  case 0xf1: I1("pop psw");
+
+  // double add
+  case 0x09: I1("dad b");
+  case 0x19: I1("dad d");
+  case 0x29: I1("dad h");
+  case 0x39: I1("dad sp");
+
+  // increment register pair
+  case 0x03: I1("inx b");
+  case 0x13: I1("inx d");
+  case 0x23: I1("inx h");
+  case 0x33: I1("inx sp");
+
+  // decrement register pair
+  case 0x0b: I1("dcx b");
+  case 0x1b: I1("dcx d");
+  case 0x2b: I1("dcx h");
+  case 0x3b: I1("dcx sp");
+
+  // exchange registers
+  case 0xeb: I1("xchg");
+  case 0xe3: I1("xthl");
+  case 0xf9: I1("sphl");
+
+  // move immediate word
+  case 0x01: I3("lxi b, 0x%x");
+  case 0x11: I3("lxi d, 0x%x");
+  case 0x21: I3("lxi h, 0x%x");
+  case 0x31: I3("lxi sp, 0x%x");
+
+  // move immediate byte
+  case 0x06: I2("mvi b, 0x%x");
+  case 0x0e: I2("mvi c, 0x%x");
+  case 0x16: I2("mvi d, 0x%x");
+  case 0x1e: I2("mvi e, 0x%x");
+  case 0x26: I2("mvi h, 0x%x");
+  case 0x2e: I2("mvi l, 0x%x");
+  case 0x36: I2("mvi [hl], 0x%x");
+  case 0x3e: I2("mvi a, 0x%x");
+
+  // immediate instructions
+  case 0xc6: I2("adi 0x%x");
+  case 0xce: I2("aci 0x%x");
+  case 0xd6: I2("sui 0x%x");
+  case 0xde: I2("sbi 0x%x");
+  case 0xe6: I2("ani 0x%x");
+  case 0xee: I2("xri 0x%x");
+  case 0xf6: I2("ori 0x%x");
+  case 0xfe: I2("cpi 0x%x");
+
+  // store/load accumulator direct
+  case 0x32: I3("sta 0x%x");
+  case 0x3a: I3("lda 0x%x");
+
+  // store/load HL direct
+  case 0x22: I3("shld 0x%x");
+  case 0x2a: I3("lhld 0x%x");
+
+  // load program counter
+  case 0xe9: I1("pchl");
+
+  // jump instructions
+  case 0xc3: I3("jmp 0x%x");
+  case 0xcb: I3("jmp 0x%x"); // undocumented
+  case 0xda: I3("jc 0x%x");
+  case 0xd2: I3("jnc 0x%x");
+  case 0xca: I3("jz 0x%x");
+  case 0xc2: I3("jnz 0x%x");
+  case 0xfa: I3("jm 0x%x");
+  case 0xf2: I3("jp 0x%x");
+  case 0xea: I3("jpe 0x%x");
+  case 0xe2: I3("jpo 0x%x");
+
+  // call subroutine instructions
+  case 0xcd: I3("call 0x%x");
+  case 0xdd: I3("call 0x%x"); // undocumented
+  case 0xed: I3("call 0x%x"); // undocumented
+  case 0xfd: I3("call 0x%x"); // undocumented
+  case 0xdc: I3("cc 0x%x");
+  case 0xd4: I3("cnc 0x%x");
+  case 0xcc: I3("cz 0x%x");
+  case 0xc4: I3("cnz 0x%x");
+  case 0xfc: I3("cm 0x%x");
+  case 0xf4: I3("cp 0x%x");
+  case 0xec: I3("cpe 0x%x");
+  case 0xe4: I3("cpo 0x%x");
+
+  // return from subroutine instructions
+  case 0xc9: I1("ret");
+  case 0xd9: I1("ret"); // undocumented
+  case 0xd8: I1("rc");
+  case 0xd0: I1("rnc");
+  case 0xc8: I1("rz");
+  case 0xc0: I1("rnz");
+  case 0xf8: I1("rm");
+  case 0xf0: I1("rp");
+  case 0xe8: I1("rpe");
+  case 0xe0: I1("rpo");
+
+  // restart instructions
+  case 0xc7: I1("rst 0");
+  case 0xcf: I1("rst 1");
+  case 0xd7: I1("rst 2");
+  case 0xdf: I1("rst 3");
+  case 0xe7: I1("rst 4");
+  case 0xef: I1("rst 5");
+  case 0xf7: I1("rst 6");
+  case 0xff: I1("rst 7");
+
+  // interrupt flip-flop instructions
+  case 0xfb: I1("ei");
+  case 0xf3: I1("di");
+
+  // input/output instructions
+  case 0xdb: I2("in 0x%x");
+  case 0xd3: I2("out 0x%x");
+
+  // halt instruction
+  case 0x76: I1("hlt");
+  }
+#undef I1
+#undef I2
+#undef I3
 }
 
 static inline uint8_t m8080_next_byte(m8080* const c) {
