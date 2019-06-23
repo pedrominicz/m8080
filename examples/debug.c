@@ -2,12 +2,15 @@
 #define M8080_IMPLEMENTATION
 #include "m8080.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
 enum {
   NOP = 0,
+  BREAK,
+  CONTINUE,
   DISASSEMBLE,
   DISASSEMBLE_FUNCTION,
   PRINT_REGISTERS,
@@ -35,7 +38,7 @@ void m8080_in(m8080* const c, const uint8_t a) { }
 void m8080_out(m8080* const c, const uint8_t a) { }
 
 void m8080_hlt(m8080* const c) {
-  c->pc = 0;
+  --c->pc;
 }
 
 static inline int read_argument(void) {
@@ -64,6 +67,20 @@ static inline Command read_command(void) {
   case '\n':
     cmd.type = NOP;
     return cmd;
+  case 'b':
+    ch = getchar();
+    while(ch == ' ' || ch == '\t') ch = getchar();
+    if(ch == '\n') { // breakpoint requires one argument
+      cmd.type = HELP;
+      return cmd;
+    }
+    ungetc(ch, stdin);
+    cmd.data = read_argument();
+    cmd.type = cmd.data != -1 ? BREAK : HELP;
+    break;
+  case 'c':
+    cmd.type = CONTINUE;
+    break;
   case 'd':
     cmd.data = read_argument();
     cmd.type = cmd.data != -1 ? DISASSEMBLE : HELP;
@@ -96,20 +113,6 @@ static inline Command read_command(void) {
   }
 }
 
-static inline void print_registers(const m8080* const c) {
-  uint8_t f = 0x02; // bit 1 is always 1
-  f |= c->f.c << 0;
-  f |= c->f.p << 2;
-  f |= c->f.a << 4;
-  f |= c->f.z << 6;
-  f |= c->f.s << 7;
-  printf("    af   bc   de   hl   pc   sp  flags cycles\n");
-  printf("0x %02x%02x %04x %04x %04x %04x %04x %c%c%c%c%c %zu\n",
-      c->a, f, c->bc, c->de, c->hl, c->pc, c->sp,
-      c->f.c ? 'c' : '.', c->f.p ? 'p' : '.', c->f.a ? 'a' : '.',
-      c->f.z ? 'z' : '.', c->f.s ? 's' : '.', c->cycles);
-}
-
 static inline size_t debug_step(m8080* const c) {
   const size_t ret = m8080_step(c);
 
@@ -122,9 +125,26 @@ static inline size_t debug_step(m8080* const c) {
       }
     }
     if(c->c == 0x02) putchar(c->e);
+
+    c->pc = m8080_rw(c, c->sp);
+    c->sp += 2;
   }
 
   return ret;
+}
+
+static inline void print_registers(const m8080* const c) {
+  uint8_t f = 0x02; // bit 1 is always 1
+  f |= c->f.c << 0;
+  f |= c->f.p << 2;
+  f |= c->f.a << 4;
+  f |= c->f.z << 6;
+  f |= c->f.s << 7;
+  printf("    af   bc   de   hl   pc   sp  flags cycles\n");
+  printf("0x %02x%02x %04x %04x %04x %04x %04x %c%c%c%c%c %zu\n",
+      c->a, f, c->bc, c->de, c->hl, c->pc, c->sp,
+      c->f.c ? 'c' : '.', c->f.p ? 'p' : '.', c->f.a ? 'a' : '.',
+      c->f.z ? 'z' : '.', c->f.s ? 's' : '.', c->cycles);
 }
 
 int main(int argc, char** argv) {
@@ -146,9 +166,10 @@ int main(int argc, char** argv) {
   fread(memory + c.pc, 1, sizeof(memory) - c.pc, f);
   fclose(f);
 
+  // the test ROMs jump to 0x0000 when finished
   memory[0x0000] = 0x76; // hlt
-  // the test ROMs expect a print function to be located at 0x0005
-  memory[0x0005] = 0xc9; // ret
+
+  bool breakpoint[0x10000] = {0};
 
   while(1) {
     printf("[0x%04x]> ", c.pc);
@@ -156,6 +177,18 @@ int main(int argc, char** argv) {
 
     switch(cmd.type) {
     case NOP: break;
+    case BREAK:
+      breakpoint[cmd.data] = !breakpoint[cmd.data];
+      printf("%s breakpoint at 0x%04x\n",
+          breakpoint[cmd.data] ? "added" : "removed",
+          cmd.data);
+      break;
+    case CONTINUE:
+      while(memory[c.pc] != 0x76) {
+        if(breakpoint[c.pc]) break;
+        debug_step(&c);
+      }
+      break;
     case DISASSEMBLE: {
       size_t pos = c.pc;
       for(size_t i = 0; i < cmd.data; ++i) {
@@ -163,7 +196,7 @@ int main(int argc, char** argv) {
           printf("EOF\n");
           break;
         }
-        pos += m8080_disassemble(&c, pos);
+        pos += m8080_disassemble(&c, pos, breakpoint[pos]);
       }
     } break;
     case DISASSEMBLE_FUNCTION: {
@@ -173,9 +206,9 @@ int main(int argc, char** argv) {
           printf("EOF\n");
           break;
         }
-        pos += m8080_disassemble(&c, pos);
+        pos += m8080_disassemble(&c, pos, breakpoint[pos]);
         if(memory[pos] == 0xc9 || memory[pos] == 0xd9) {
-          m8080_disassemble(&c, pos); // print `ret`
+          m8080_disassemble(&c, pos, breakpoint[pos]); // print `ret`
           break;
         }
       }
@@ -194,6 +227,8 @@ int main(int argc, char** argv) {
     case HELP:
     default:
       printf("usage: [command] [option]\n");
+      printf("| b [pos]   toggle breakpoint at pos\n");
+      printf("| c         continue until breakpoint or halt\n");
       printf("| d         disassemble next instruction\n");
       printf("| d [count] disassemble count instructions\n");
       printf("| f         disassemble until return instruction\n");
