@@ -113,6 +113,17 @@ static inline Command read_command(void) {
   }
 }
 
+static inline int debug_disassemble(const m8080* const c, const uint16_t pos, const bool b) {
+  int ret = m8080_disassemble(c, pos, b);
+  if(m8080_rb(c, pos) == 0xcd
+      && m8080_rb(c, pos + 1) == 0x05
+      && m8080_rb(c, pos + 2) == 0x00) {
+    printf("\t; special print function");
+  }
+  putchar('\n');
+  return ret;
+}
+
 static inline size_t debug_step(m8080* const c) {
   const size_t ret = m8080_step(c);
 
@@ -134,7 +145,7 @@ static inline size_t debug_step(m8080* const c) {
 }
 
 static inline void print_registers(const m8080* const c) {
-  uint8_t f = 0x02; // bit 1 is always 1
+  uint8_t f = 0x02; // bit 1 is always 1, refer to `m8080_push_psw` for more info
   f |= c->f.c << 0;
   f |= c->f.p << 2;
   f |= c->f.a << 4;
@@ -196,7 +207,7 @@ int main(int argc, char** argv) {
           printf("EOF\n");
           break;
         }
-        pos += m8080_disassemble(&c, pos, breakpoint[pos]);
+        pos += debug_disassemble(&c, pos, breakpoint[pos]);
       }
     } break;
     case DISASSEMBLE_FUNCTION: {
@@ -206,9 +217,9 @@ int main(int argc, char** argv) {
           printf("EOF\n");
           break;
         }
-        pos += m8080_disassemble(&c, pos, breakpoint[pos]);
+        pos += debug_disassemble(&c, pos, breakpoint[pos]);
         if(memory[pos] == 0xc9 || memory[pos] == 0xd9) {
-          m8080_disassemble(&c, pos, breakpoint[pos]); // print `ret`
+          debug_disassemble(&c, pos, breakpoint[pos]); // print `ret`
           break;
         }
       }

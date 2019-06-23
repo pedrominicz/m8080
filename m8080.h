@@ -43,7 +43,8 @@ enum {
 
 // prints the instruction at `pos` to stdout and returns it's size
 // set `b` if there is a breakpoint at `pos`
-size_t m8080_disassemble(const m8080* const c, const uint16_t pos, const bool b);
+// doesn't print an end of line
+int m8080_disassemble(const m8080* const c, const uint16_t pos, const bool b);
 
 size_t m8080_step(m8080* const c);
 // when the original 8080 recognizes an interrupt request from an external
@@ -128,15 +129,15 @@ static inline uint16_t m8080_ww(m8080* const c, const uint16_t a, const uint16_t
   return m8080_rw(c, a);
 }
 
-size_t m8080_disassemble(const m8080* const c, const uint16_t pos, const bool b) {
+int m8080_disassemble(const m8080* const c, const uint16_t pos, const bool b) {
   const uint8_t opcode = m8080_rb(c, pos);
   const uint8_t byte = m8080_rb(c, pos + 1);
   const uint16_t word = m8080_rw(c, pos + 1);
   printf("| 0x%04x %c\t", pos, b ? 'b' : ' ');
 
-#define I1(s) printf("%02x        " s "\n", opcode); return 1;
-#define I2(s) printf("%02x%02x      " s "\n", opcode, m8080_rb(c, pos + 1), byte); return 2;
-#define I3(s) printf("%02x%02x%02x    " s "\n", opcode, m8080_rb(c, pos + 1), m8080_rb(c, pos + 2), word); return 3;
+#define I1(s) printf("%02x        " s, opcode); return 1;
+#define I2(s) printf("%02x%02x      " s, opcode, m8080_rb(c, pos + 1), byte); return 2;
+#define I3(s) printf("%02x%02x%02x    " s, opcode, m8080_rb(c, pos + 1), m8080_rb(c, pos + 2), word); return 3;
   switch(opcode) {
   // set carry
   case 0x37: I1("stc");
