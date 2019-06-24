@@ -1027,7 +1027,7 @@ size_t m8080_step(m8080* const c) {
   case 0xd3: m8080_out(c, m8080_next_byte(c)); break; // out byte
 
   // halt instruction (user-defined)
-  case 0x76: m8080_hlt(c); break; // HLT
+  case 0x76: m8080_hlt(c); break; // hlt
   }
 
   return c->cycles - previous_cycle;
