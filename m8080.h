@@ -688,343 +688,343 @@ size_t m8080_step(m8080* const c) {
 
   switch(opcode) {
   // set carry
-  case 0x37: c->f.c = 1; break; // STC
+  case 0x37: c->f.c = 1; break; // stc
 
   // complement carry
-  case 0x3f: c->f.c = !c->f.c; break; // CMC
+  case 0x3f: c->f.c = !c->f.c; break; // cmc
 
   // increment register or memory
-  case 0x04: ++c->b; c->f.a = (c->b & 0x0f) == 0; m8080_set_pzs(c, c->b); break; // INR B
-  case 0x0c: ++c->c; c->f.a = (c->c & 0x0f) == 0; m8080_set_pzs(c, c->c); break; // INR C
-  case 0x14: ++c->d; c->f.a = (c->d & 0x0f) == 0; m8080_set_pzs(c, c->d); break; // INR D
-  case 0x1c: ++c->e; c->f.a = (c->e & 0x0f) == 0; m8080_set_pzs(c, c->e); break; // INR E
-  case 0x24: ++c->h; c->f.a = (c->h & 0x0f) == 0; m8080_set_pzs(c, c->h); break; // INR H
-  case 0x2c: ++c->l; c->f.a = (c->l & 0x0f) == 0; m8080_set_pzs(c, c->l); break; // INR L
-  case 0x34: { // INR M
+  case 0x04: ++c->b; c->f.a = (c->b & 0x0f) == 0; m8080_set_pzs(c, c->b); break; // inr b
+  case 0x0c: ++c->c; c->f.a = (c->c & 0x0f) == 0; m8080_set_pzs(c, c->c); break; // inr c
+  case 0x14: ++c->d; c->f.a = (c->d & 0x0f) == 0; m8080_set_pzs(c, c->d); break; // inr d
+  case 0x1c: ++c->e; c->f.a = (c->e & 0x0f) == 0; m8080_set_pzs(c, c->e); break; // inr e
+  case 0x24: ++c->h; c->f.a = (c->h & 0x0f) == 0; m8080_set_pzs(c, c->h); break; // inr h
+  case 0x2c: ++c->l; c->f.a = (c->l & 0x0f) == 0; m8080_set_pzs(c, c->l); break; // inr l
+  case 0x34: { // inr [hl]
     const uint8_t res = m8080_rb(c, c->hl) + 1;
     m8080_wb(c, c->hl, res);
     c->f.a = (res & 0x0f) == 0;
     m8080_set_pzs(c, res);
   } break;
-  case 0x3c: ++c->a; c->f.a = (c->a & 0x0f) == 0; m8080_set_pzs(c, c->a); break; // INR A
+  case 0x3c: ++c->a; c->f.a = (c->a & 0x0f) == 0; m8080_set_pzs(c, c->a); break; // inr a
 
   // decrement register or memory
-  case 0x05: --c->b; c->f.a = (c->b & 0x0f) != 0x0f; m8080_set_pzs(c, c->b); break; // DCR B
-  case 0x0d: --c->c; c->f.a = (c->c & 0x0f) != 0x0f; m8080_set_pzs(c, c->c); break; // DCR C
-  case 0x15: --c->d; c->f.a = (c->d & 0x0f) != 0x0f; m8080_set_pzs(c, c->d); break; // DCR D
-  case 0x1d: --c->e; c->f.a = (c->e & 0x0f) != 0x0f; m8080_set_pzs(c, c->e); break; // DCR E
-  case 0x25: --c->h; c->f.a = (c->h & 0x0f) != 0x0f; m8080_set_pzs(c, c->h); break; // DCR H
-  case 0x2d: --c->l; c->f.a = (c->l & 0x0f) != 0x0f; m8080_set_pzs(c, c->l); break; // DCR L
-  case 0x35: { // DCR M
+  case 0x05: --c->b; c->f.a = (c->b & 0x0f) != 0x0f; m8080_set_pzs(c, c->b); break; // dcr b
+  case 0x0d: --c->c; c->f.a = (c->c & 0x0f) != 0x0f; m8080_set_pzs(c, c->c); break; // dcr c
+  case 0x15: --c->d; c->f.a = (c->d & 0x0f) != 0x0f; m8080_set_pzs(c, c->d); break; // dcr d
+  case 0x1d: --c->e; c->f.a = (c->e & 0x0f) != 0x0f; m8080_set_pzs(c, c->e); break; // dcr e
+  case 0x25: --c->h; c->f.a = (c->h & 0x0f) != 0x0f; m8080_set_pzs(c, c->h); break; // dcr h
+  case 0x2d: --c->l; c->f.a = (c->l & 0x0f) != 0x0f; m8080_set_pzs(c, c->l); break; // dcr l
+  case 0x35: { // dcr [hl]
     const uint8_t res = m8080_rb(c, c->hl) - 1;
     m8080_wb(c, c->hl, res);
     c->f.a = (res & 0x0f) != 0x0f;
     m8080_set_pzs(c, res);
   } break;
-  case 0x3d: --c->a; c->f.a = (c->a & 0x0f) != 0x0f; m8080_set_pzs(c, c->a); break; // DCR A
+  case 0x3d: --c->a; c->f.a = (c->a & 0x0f) != 0x0f; m8080_set_pzs(c, c->a); break; // dcr a
 
   // complement accumulator
-  case 0x2f: c->a = ~c->a; break; // CMA
+  case 0x2f: c->a = ~c->a; break; // cma
 
   // decimal adjust accumulator
-  case 0x27: m8080_daa(c); break; // DAA
+  case 0x27: m8080_daa(c); break; // daa
 
   // no operation instructions
-  case 0x00: break; // NOP
-  case 0x08: break; // NOP
-  case 0x10: break; // NOP
-  case 0x18: break; // NOP
-  case 0x20: break; // NOP
-  case 0x28: break; // NOP
-  case 0x30: break; // NOP
-  case 0x38: break; // NOP
+  case 0x00: break; // nop
+  case 0x08: break; // nop
+  case 0x10: break; // nop
+  case 0x18: break; // nop
+  case 0x20: break; // nop
+  case 0x28: break; // nop
+  case 0x30: break; // nop
+  case 0x38: break; // nop
 
   // move
-  case 0x40: c->b = c->b; break; // MOV B,B
-  case 0x41: c->b = c->c; break; // MOV B,C
-  case 0x42: c->b = c->d; break; // MOV B,D
-  case 0x43: c->b = c->e; break; // MOV B,E
-  case 0x44: c->b = c->h; break; // MOV B,H
-  case 0x45: c->b = c->l; break; // MOV B,L
-  case 0x46: c->b = m8080_rb(c, c->hl); break; // MOV B,M
-  case 0x47: c->b = c->a; break; // MOV B,A
-  case 0x48: c->c = c->b; break; // MOV C,B
-  case 0x49: c->c = c->c; break; // MOV C,C
-  case 0x4a: c->c = c->d; break; // MOV C,D
-  case 0x4b: c->c = c->e; break; // MOV C,E
-  case 0x4c: c->c = c->h; break; // MOV C,H
-  case 0x4d: c->c = c->l; break; // MOV C,L
-  case 0x4e: c->c = m8080_rb(c, c->hl); break; // MOV C,M
-  case 0x4f: c->c = c->a; break; // MOV C,A
-  case 0x50: c->d = c->b; break; // MOV D,B
-  case 0x51: c->d = c->c; break; // MOV D,C
-  case 0x52: c->d = c->d; break; // MOV D,D
-  case 0x53: c->d = c->e; break; // MOV D,E
-  case 0x54: c->d = c->h; break; // MOV D,H
-  case 0x55: c->d = c->l; break; // MOV D,L
-  case 0x56: c->d = m8080_rb(c, c->hl); break; // MOV D,M
-  case 0x57: c->d = c->a; break; // MOV D,A
-  case 0x58: c->e = c->b; break; // MOV E,B
-  case 0x59: c->e = c->c; break; // MOV E,C
-  case 0x5a: c->e = c->d; break; // MOV E,D
-  case 0x5b: c->e = c->e; break; // MOV E,E
-  case 0x5c: c->e = c->h; break; // MOV E,H
-  case 0x5d: c->e = c->l; break; // MOV E,L
-  case 0x5e: c->e = m8080_rb(c, c->hl); break; // MOV E,M
-  case 0x5f: c->e = c->a; break; // MOV E,A
-  case 0x60: c->h = c->b; break; // MOV H,B
-  case 0x61: c->h = c->c; break; // MOV H,C
-  case 0x62: c->h = c->d; break; // MOV H,D
-  case 0x63: c->h = c->e; break; // MOV H,E
-  case 0x64: c->h = c->h; break; // MOV H,H
-  case 0x65: c->h = c->l; break; // MOV H,L
-  case 0x66: c->h = m8080_rb(c, c->hl); break; // MOV H,M
-  case 0x67: c->h = c->a; break; // MOV H,A
-  case 0x68: c->l = c->b; break; // MOV L,B
-  case 0x69: c->l = c->c; break; // MOV L,C
-  case 0x6a: c->l = c->d; break; // MOV L,D
-  case 0x6b: c->l = c->e; break; // MOV L,E
-  case 0x6c: c->l = c->h; break; // MOV L,H
-  case 0x6d: c->l = c->l; break; // MOV L,L
-  case 0x6e: c->l = m8080_rb(c, c->hl); break; // MOV L,M
-  case 0x6f: c->l = c->a; break; // MOV L,A
-  case 0x70: m8080_wb(c, c->hl, c->b); break; // MOV M,B
-  case 0x71: m8080_wb(c, c->hl, c->c); break; // MOV M,C
-  case 0x72: m8080_wb(c, c->hl, c->d); break; // MOV M,D
-  case 0x73: m8080_wb(c, c->hl, c->e); break; // MOV M,E
-  case 0x74: m8080_wb(c, c->hl, c->h); break; // MOV M,H
-  case 0x75: m8080_wb(c, c->hl, c->l); break; // MOV M,L
-  case 0x77: m8080_wb(c, c->hl, c->a); break; // MOV M,A
-  case 0x78: c->a = c->b; break; // MOV A,B
-  case 0x79: c->a = c->c; break; // MOV A,C
-  case 0x7a: c->a = c->d; break; // MOV A,D
-  case 0x7b: c->a = c->e; break; // MOV A,E
-  case 0x7c: c->a = c->h; break; // MOV A,H
-  case 0x7d: c->a = c->l; break; // MOV A,L
-  case 0x7e: c->a = m8080_rb(c, c->hl); break; // MOV A,M
-  case 0x7f: c->a = c->a; break; // MOV A,A
+  case 0x40: c->b = c->b; break; // mov b, b
+  case 0x41: c->b = c->c; break; // mov b, c
+  case 0x42: c->b = c->d; break; // mov b, d
+  case 0x43: c->b = c->e; break; // mov b, e
+  case 0x44: c->b = c->h; break; // mov b, h
+  case 0x45: c->b = c->l; break; // mov b, l
+  case 0x46: c->b = m8080_rb(c, c->hl); break; // mov b, [hl]
+  case 0x47: c->b = c->a; break; // mov b, a
+  case 0x48: c->c = c->b; break; // mov c, b
+  case 0x49: c->c = c->c; break; // mov c, c
+  case 0x4a: c->c = c->d; break; // mov c, d
+  case 0x4b: c->c = c->e; break; // mov c, e
+  case 0x4c: c->c = c->h; break; // mov c, h
+  case 0x4d: c->c = c->l; break; // mov c, l
+  case 0x4e: c->c = m8080_rb(c, c->hl); break; // mov c, [hl]
+  case 0x4f: c->c = c->a; break; // mov c, a
+  case 0x50: c->d = c->b; break; // mov d, b
+  case 0x51: c->d = c->c; break; // mov d, c
+  case 0x52: c->d = c->d; break; // mov d, d
+  case 0x53: c->d = c->e; break; // mov d, e
+  case 0x54: c->d = c->h; break; // mov d, h
+  case 0x55: c->d = c->l; break; // mov d, l
+  case 0x56: c->d = m8080_rb(c, c->hl); break; // mov d, [hl]
+  case 0x57: c->d = c->a; break; // mov d, a
+  case 0x58: c->e = c->b; break; // mov e, b
+  case 0x59: c->e = c->c; break; // mov e, c
+  case 0x5a: c->e = c->d; break; // mov e, d
+  case 0x5b: c->e = c->e; break; // mov e, e
+  case 0x5c: c->e = c->h; break; // mov e, h
+  case 0x5d: c->e = c->l; break; // mov e, l
+  case 0x5e: c->e = m8080_rb(c, c->hl); break; // mov e, [hl]
+  case 0x5f: c->e = c->a; break; // mov e, a
+  case 0x60: c->h = c->b; break; // mov h, b
+  case 0x61: c->h = c->c; break; // mov h, c
+  case 0x62: c->h = c->d; break; // mov h, d
+  case 0x63: c->h = c->e; break; // mov h, e
+  case 0x64: c->h = c->h; break; // mov h, h
+  case 0x65: c->h = c->l; break; // mov h, l
+  case 0x66: c->h = m8080_rb(c, c->hl); break; // mov h, [hl]
+  case 0x67: c->h = c->a; break; // mov h, a
+  case 0x68: c->l = c->b; break; // mov l, b
+  case 0x69: c->l = c->c; break; // mov l, c
+  case 0x6a: c->l = c->d; break; // mov l, d
+  case 0x6b: c->l = c->e; break; // mov l, e
+  case 0x6c: c->l = c->h; break; // mov l, h
+  case 0x6d: c->l = c->l; break; // mov l, l
+  case 0x6e: c->l = m8080_rb(c, c->hl); break; // mov l, [hl]
+  case 0x6f: c->l = c->a; break; // mov l, a
+  case 0x70: m8080_wb(c, c->hl, c->b); break; // mov [hl], b
+  case 0x71: m8080_wb(c, c->hl, c->c); break; // mov [hl], c
+  case 0x72: m8080_wb(c, c->hl, c->d); break; // mov [hl], d
+  case 0x73: m8080_wb(c, c->hl, c->e); break; // mov [hl], e
+  case 0x74: m8080_wb(c, c->hl, c->h); break; // mov [hl], h
+  case 0x75: m8080_wb(c, c->hl, c->l); break; // mov [hl], l
+  case 0x77: m8080_wb(c, c->hl, c->a); break; // mov [hl], a
+  case 0x78: c->a = c->b; break; // mov a, b
+  case 0x79: c->a = c->c; break; // mov a, c
+  case 0x7a: c->a = c->d; break; // mov a, d
+  case 0x7b: c->a = c->e; break; // mov a, e
+  case 0x7c: c->a = c->h; break; // mov a, h
+  case 0x7d: c->a = c->l; break; // mov a, l
+  case 0x7e: c->a = m8080_rb(c, c->hl); break; // mov a, [hl]
+  case 0x7f: c->a = c->a; break; // mov a, a
 
   // store accumulator
-  case 0x02: m8080_wb(c, c->bc, c->a); break; // STAX B
-  case 0x12: m8080_wb(c, c->de, c->a); break; // STAX D
+  case 0x02: m8080_wb(c, c->bc, c->a); break; // stax b
+  case 0x12: m8080_wb(c, c->de, c->a); break; // stax d
 
   // load accumulator
-  case 0x0a: c->a = m8080_rb(c, c->bc); break; // LDAX B
-  case 0x1a: c->a = m8080_rb(c, c->de); break; // LDAX D
+  case 0x0a: c->a = m8080_rb(c, c->bc); break; // ldax b
+  case 0x1a: c->a = m8080_rb(c, c->de); break; // ldax d
 
   // add register or memory to accumulator
-  case 0x80: m8080_add(c, c->b); break; // ADD B
-  case 0x81: m8080_add(c, c->c); break; // ADD C
-  case 0x82: m8080_add(c, c->d); break; // ADD D
-  case 0x83: m8080_add(c, c->e); break; // ADD E
-  case 0x84: m8080_add(c, c->h); break; // ADD H
-  case 0x85: m8080_add(c, c->l); break; // ADD L
-  case 0x86: m8080_add(c, m8080_rb(c, c->hl)); break; // ADD M
-  case 0x87: m8080_add(c, c->a); break; // ADD A
+  case 0x80: m8080_add(c, c->b); break; // add b
+  case 0x81: m8080_add(c, c->c); break; // add c
+  case 0x82: m8080_add(c, c->d); break; // add d
+  case 0x83: m8080_add(c, c->e); break; // add e
+  case 0x84: m8080_add(c, c->h); break; // add h
+  case 0x85: m8080_add(c, c->l); break; // add l
+  case 0x86: m8080_add(c, m8080_rb(c, c->hl)); break; // add [hl]
+  case 0x87: m8080_add(c, c->a); break; // add a
 
   // add register or memory to accumulator with carry
-  case 0x88: m8080_adc(c, c->b); break; // ADC B
-  case 0x89: m8080_adc(c, c->c); break; // ADC C
-  case 0x8a: m8080_adc(c, c->d); break; // ADC D
-  case 0x8b: m8080_adc(c, c->e); break; // ADC E
-  case 0x8c: m8080_adc(c, c->h); break; // ADC H
-  case 0x8d: m8080_adc(c, c->l); break; // ADC L
-  case 0x8e: m8080_adc(c, m8080_rb(c, c->hl)); break; // ADC M
-  case 0x8f: m8080_adc(c, c->a); break; // ADC A
+  case 0x88: m8080_adc(c, c->b); break; // adc b
+  case 0x89: m8080_adc(c, c->c); break; // adc c
+  case 0x8a: m8080_adc(c, c->d); break; // adc d
+  case 0x8b: m8080_adc(c, c->e); break; // adc e
+  case 0x8c: m8080_adc(c, c->h); break; // adc h
+  case 0x8d: m8080_adc(c, c->l); break; // adc l
+  case 0x8e: m8080_adc(c, m8080_rb(c, c->hl)); break; // adc [hl]
+  case 0x8f: m8080_adc(c, c->a); break; // adc a
 
   // subtract register or memory from accumulator
-  case 0x90: m8080_sub(c, c->b); break; // SUB B
-  case 0x91: m8080_sub(c, c->c); break; // SUB C
-  case 0x92: m8080_sub(c, c->d); break; // SUB D
-  case 0x93: m8080_sub(c, c->e); break; // SUB E
-  case 0x94: m8080_sub(c, c->h); break; // SUB H
-  case 0x95: m8080_sub(c, c->l); break; // SUB L
-  case 0x96: m8080_sub(c, m8080_rb(c, c->hl)); break; // SUB M
-  case 0x97: m8080_sub(c, c->a); break; // SUB A
+  case 0x90: m8080_sub(c, c->b); break; // sub b
+  case 0x91: m8080_sub(c, c->c); break; // sub c
+  case 0x92: m8080_sub(c, c->d); break; // sub d
+  case 0x93: m8080_sub(c, c->e); break; // sub e
+  case 0x94: m8080_sub(c, c->h); break; // sub h
+  case 0x95: m8080_sub(c, c->l); break; // sub l
+  case 0x96: m8080_sub(c, m8080_rb(c, c->hl)); break; // sub [hl]
+  case 0x97: m8080_sub(c, c->a); break; // sub a
 
   // subtract register or memory from accumulator with borrow
-  case 0x98: m8080_sbb(c, c->b); break; // SBB B
-  case 0x99: m8080_sbb(c, c->c); break; // SBB C
-  case 0x9a: m8080_sbb(c, c->d); break; // SBB D
-  case 0x9b: m8080_sbb(c, c->e); break; // SBB E
-  case 0x9c: m8080_sbb(c, c->h); break; // SBB H
-  case 0x9d: m8080_sbb(c, c->l); break; // SBB L
-  case 0x9e: m8080_sbb(c, m8080_rb(c, c->hl)); break; // SBB M
-  case 0x9f: m8080_sbb(c, c->a); break; // SBB A
+  case 0x98: m8080_sbb(c, c->b); break; // sbb b
+  case 0x99: m8080_sbb(c, c->c); break; // sbb c
+  case 0x9a: m8080_sbb(c, c->d); break; // sbb d
+  case 0x9b: m8080_sbb(c, c->e); break; // sbb e
+  case 0x9c: m8080_sbb(c, c->h); break; // sbb h
+  case 0x9d: m8080_sbb(c, c->l); break; // sbb l
+  case 0x9e: m8080_sbb(c, m8080_rb(c, c->hl)); break; // sbb [hl]
+  case 0x9f: m8080_sbb(c, c->a); break; // sbb a
 
-  // logical AND register or memory with accumulator
-  case 0xa0: m8080_ana(c, c->b); break; // ANA B
-  case 0xa1: m8080_ana(c, c->c); break; // ANA C
-  case 0xa2: m8080_ana(c, c->d); break; // ANA D
-  case 0xa3: m8080_ana(c, c->e); break; // ANA E
-  case 0xa4: m8080_ana(c, c->h); break; // ANA H
-  case 0xa5: m8080_ana(c, c->l); break; // ANA L
-  case 0xa6: m8080_ana(c, m8080_rb(c, c->hl)); break; // ANA M
-  case 0xa7: m8080_ana(c, c->a); break; // ANA A
+  // logical and register or memory with accumulator
+  case 0xa0: m8080_ana(c, c->b); break; // ana b
+  case 0xa1: m8080_ana(c, c->c); break; // ana c
+  case 0xa2: m8080_ana(c, c->d); break; // ana d
+  case 0xa3: m8080_ana(c, c->e); break; // ana e
+  case 0xa4: m8080_ana(c, c->h); break; // ana h
+  case 0xa5: m8080_ana(c, c->l); break; // ana l
+  case 0xa6: m8080_ana(c, m8080_rb(c, c->hl)); break; // ana [hl]
+  case 0xa7: m8080_ana(c, c->a); break; // ana a
 
-  // logical XOR register or memory with accumulator
-  case 0xa8: m8080_xra(c, c->b); break; // XRA B
-  case 0xa9: m8080_xra(c, c->c); break; // XRA C
-  case 0xaa: m8080_xra(c, c->d); break; // XRA D
-  case 0xab: m8080_xra(c, c->e); break; // XRA E
-  case 0xac: m8080_xra(c, c->h); break; // XRA H
-  case 0xad: m8080_xra(c, c->l); break; // XRA L
-  case 0xae: m8080_xra(c, m8080_rb(c, c->hl)); break; // XRA M
-  case 0xaf: m8080_xra(c, c->a); break; // XRA A
+  // logical xor register or memory with accumulator
+  case 0xa8: m8080_xra(c, c->b); break; // xra b
+  case 0xa9: m8080_xra(c, c->c); break; // xra c
+  case 0xaa: m8080_xra(c, c->d); break; // xra d
+  case 0xab: m8080_xra(c, c->e); break; // xra e
+  case 0xac: m8080_xra(c, c->h); break; // xra h
+  case 0xad: m8080_xra(c, c->l); break; // xra l
+  case 0xae: m8080_xra(c, m8080_rb(c, c->hl)); break; // xra [hl]
+  case 0xaf: m8080_xra(c, c->a); break; // xra a
 
   // logical OR register or memory with accumulator
-  case 0xb0: m8080_ora(c, c->b); break; // ORA B
-  case 0xb1: m8080_ora(c, c->c); break; // ORA C
-  case 0xb2: m8080_ora(c, c->d); break; // ORA D
-  case 0xb3: m8080_ora(c, c->e); break; // ORA E
-  case 0xb4: m8080_ora(c, c->h); break; // ORA H
-  case 0xb5: m8080_ora(c, c->l); break; // ORA L
-  case 0xb6: m8080_ora(c, m8080_rb(c, c->hl)); break; // ORA M
-  case 0xb7: m8080_ora(c, c->a); break; // ORA A
+  case 0xb0: m8080_ora(c, c->b); break; // ora b
+  case 0xb1: m8080_ora(c, c->c); break; // ora c
+  case 0xb2: m8080_ora(c, c->d); break; // ora d
+  case 0xb3: m8080_ora(c, c->e); break; // ora e
+  case 0xb4: m8080_ora(c, c->h); break; // ora h
+  case 0xb5: m8080_ora(c, c->l); break; // ora l
+  case 0xb6: m8080_ora(c, m8080_rb(c, c->hl)); break; // ora [hl]
+  case 0xb7: m8080_ora(c, c->a); break; // ora a
 
   // compare register or memory with accumulator
-  case 0xb8: m8080_cmp(c, c->b); break; // CMP B
-  case 0xb9: m8080_cmp(c, c->c); break; // CMP C
-  case 0xba: m8080_cmp(c, c->d); break; // CMP D
-  case 0xbb: m8080_cmp(c, c->e); break; // CMP E
-  case 0xbc: m8080_cmp(c, c->h); break; // CMP H
-  case 0xbd: m8080_cmp(c, c->l); break; // CMP L
-  case 0xbe: m8080_cmp(c, m8080_rb(c, c->hl)); break; // CMP M
-  case 0xbf: m8080_cmp(c, c->a); break; // CMP A
+  case 0xb8: m8080_cmp(c, c->b); break; // cmp b
+  case 0xb9: m8080_cmp(c, c->c); break; // cmp c
+  case 0xba: m8080_cmp(c, c->d); break; // cmp d
+  case 0xbb: m8080_cmp(c, c->e); break; // cmp e
+  case 0xbc: m8080_cmp(c, c->h); break; // cmp h
+  case 0xbd: m8080_cmp(c, c->l); break; // cmp l
+  case 0xbe: m8080_cmp(c, m8080_rb(c, c->hl)); break; // cmp [hl]
+  case 0xbf: m8080_cmp(c, c->a); break; // cmp a
 
   // rotate accumulator instructions
-  case 0x07: m8080_rlc(c); break; // RLC
-  case 0x0f: m8080_rrc(c); break; // RRC
-  case 0x17: m8080_ral(c); break; // RAL
-  case 0x1f: m8080_rar(c); break; // RAR
+  case 0x07: m8080_rlc(c); break; // rlc
+  case 0x0f: m8080_rrc(c); break; // rrc
+  case 0x17: m8080_ral(c); break; // ral
+  case 0x1f: m8080_rar(c); break; // rar
 
   // push data onto stack
-  case 0xc5: m8080_push(c, c->bc); break; // PUSH B
-  case 0xd5: m8080_push(c, c->de); break; // PUSH D
-  case 0xe5: m8080_push(c, c->hl); break; // PUSH H
-  case 0xf5: m8080_push_psw(c); break; // PUSH PSW
+  case 0xc5: m8080_push(c, c->bc); break; // push b
+  case 0xd5: m8080_push(c, c->de); break; // push d
+  case 0xe5: m8080_push(c, c->hl); break; // push h
+  case 0xf5: m8080_push_psw(c); break; // push psw
 
   // pop data off stack
-  case 0xc1: c->bc = m8080_pop(c); break; // POP B
-  case 0xd1: c->de = m8080_pop(c); break; // POP D
-  case 0xe1: c->hl = m8080_pop(c); break; // POP H
-  case 0xf1: m8080_pop_psw(c); break; // POP PSW
+  case 0xc1: c->bc = m8080_pop(c); break; // pop b
+  case 0xd1: c->de = m8080_pop(c); break; // pop d
+  case 0xe1: c->hl = m8080_pop(c); break; // pop h
+  case 0xf1: m8080_pop_psw(c); break; // pop psw
 
   // double add
-  case 0x09: c->f.c = (c->hl + c->bc) >> 16; c->hl += c->bc; break; // DAD B
-  case 0x19: c->f.c = (c->hl + c->de) >> 16; c->hl += c->de; break; // DAD D
-  case 0x29: c->f.c = (c->hl + c->hl) >> 16; c->hl += c->hl; break; // DAD H
-  case 0x39: c->f.c = (c->hl + c->sp) >> 16; c->hl += c->sp; break; // DAD SP
+  case 0x09: c->f.c = (c->hl + c->bc) >> 16; c->hl += c->bc; break; // dad b
+  case 0x19: c->f.c = (c->hl + c->de) >> 16; c->hl += c->de; break; // dad d
+  case 0x29: c->f.c = (c->hl + c->hl) >> 16; c->hl += c->hl; break; // dad h
+  case 0x39: c->f.c = (c->hl + c->sp) >> 16; c->hl += c->sp; break; // dad sp
 
   // increment register pair
-  case 0x03: ++c->bc; break; // INX B
-  case 0x13: ++c->de; break; // INX D
-  case 0x23: ++c->hl; break; // INX H
-  case 0x33: ++c->sp; break; // INX SP
+  case 0x03: ++c->bc; break; // inx b
+  case 0x13: ++c->de; break; // inx d
+  case 0x23: ++c->hl; break; // inx h
+  case 0x33: ++c->sp; break; // inx sp
 
   // decrement register pair
-  case 0x0b: --c->bc; break; // DCX B
-  case 0x1b: --c->de; break; // DCX D
-  case 0x2b: --c->hl; break; // DCX H
-  case 0x3b: --c->sp; break; // DCX SP
+  case 0x0b: --c->bc; break; // dcx b
+  case 0x1b: --c->de; break; // dcx d
+  case 0x2b: --c->hl; break; // dcx h
+  case 0x3b: --c->sp; break; // dcx sp
 
   // exchange registers
-  case 0xeb: m8080_xchg(c); break; // XCHG
-  case 0xe3: m8080_xthl(c); break; // XTHL
-  case 0xf9: c->sp = c->hl; break; // SPHL
+  case 0xeb: m8080_xchg(c); break; // xchg
+  case 0xe3: m8080_xthl(c); break; // xthl
+  case 0xf9: c->sp = c->hl; break; // sphl
 
   // move immediate word
-  case 0x01: c->bc = m8080_next_word(c); break; // LXI B,word
-  case 0x11: c->de = m8080_next_word(c); break; // LXI D,word
-  case 0x21: c->hl = m8080_next_word(c); break; // LXI H,word
-  case 0x31: c->sp = m8080_next_word(c); break; // LXI SP,word
+  case 0x01: c->bc = m8080_next_word(c); break; // lxi b, word
+  case 0x11: c->de = m8080_next_word(c); break; // lxi d, word
+  case 0x21: c->hl = m8080_next_word(c); break; // lxi h, word
+  case 0x31: c->sp = m8080_next_word(c); break; // lxi sp, word
 
   // move immediate byte
-  case 0x06: c->b = m8080_next_byte(c); break; // MVI B,byte
-  case 0x0e: c->c = m8080_next_byte(c); break; // MVI C,byte
-  case 0x16: c->d = m8080_next_byte(c); break; // MVI D,byte
-  case 0x1e: c->e = m8080_next_byte(c); break; // MVI E,byte
-  case 0x26: c->h = m8080_next_byte(c); break; // MVI H,byte
-  case 0x2e: c->l = m8080_next_byte(c); break; // MVI L,byte
-  case 0x36: m8080_wb(c, c->hl, m8080_next_byte(c)); break; // MVI M,byte
-  case 0x3e: c->a = m8080_next_byte(c); break; // MVI A,byte
+  case 0x06: c->b = m8080_next_byte(c); break; // mvi b, byte
+  case 0x0e: c->c = m8080_next_byte(c); break; // mvi c, byte
+  case 0x16: c->d = m8080_next_byte(c); break; // mvi d, byte
+  case 0x1e: c->e = m8080_next_byte(c); break; // mvi e, byte
+  case 0x26: c->h = m8080_next_byte(c); break; // mvi h, byte
+  case 0x2e: c->l = m8080_next_byte(c); break; // mvi l, byte
+  case 0x36: m8080_wb(c, c->hl, m8080_next_byte(c)); break; // mvi [hl], byte
+  case 0x3e: c->a = m8080_next_byte(c); break; // mvi a, byte
 
   // immediate instructions
-  case 0xc6: m8080_add(c, m8080_next_byte(c)); break; // ADI byte
-  case 0xce: m8080_adc(c, m8080_next_byte(c)); break; // ACI byte
-  case 0xd6: m8080_sub(c, m8080_next_byte(c)); break; // SUI byte
-  case 0xde: m8080_sbb(c, m8080_next_byte(c)); break; // SBI byte
-  case 0xe6: m8080_ana(c, m8080_next_byte(c)); break; // ANI byte
-  case 0xee: m8080_xra(c, m8080_next_byte(c)); break; // XRI byte
-  case 0xf6: m8080_ora(c, m8080_next_byte(c)); break; // ORI byte
-  case 0xfe: m8080_cmp(c, m8080_next_byte(c)); break; // CPI byte
+  case 0xc6: m8080_add(c, m8080_next_byte(c)); break; // adi byte
+  case 0xce: m8080_adc(c, m8080_next_byte(c)); break; // aci byte
+  case 0xd6: m8080_sub(c, m8080_next_byte(c)); break; // sui byte
+  case 0xde: m8080_sbb(c, m8080_next_byte(c)); break; // sbi byte
+  case 0xe6: m8080_ana(c, m8080_next_byte(c)); break; // ani byte
+  case 0xee: m8080_xra(c, m8080_next_byte(c)); break; // xri byte
+  case 0xf6: m8080_ora(c, m8080_next_byte(c)); break; // ori byte
+  case 0xfe: m8080_cmp(c, m8080_next_byte(c)); break; // cpi byte
 
   // store/load accumulator direct
-  case 0x32: m8080_wb(c, m8080_next_word(c), c->a); break; // STA word
-  case 0x3a: c->a = m8080_rb(c, m8080_next_word(c)); break; // LDA word
+  case 0x32: m8080_wb(c, m8080_next_word(c), c->a); break; // sta word
+  case 0x3a: c->a = m8080_rb(c, m8080_next_word(c)); break; // lda word
 
-  // store/load HL direct
-  case 0x22: m8080_ww(c, m8080_next_word(c), c->hl); break; // SHLD word
-  case 0x2a: c->hl = m8080_rw(c, m8080_next_word(c)); break; // LHLD word
+  // store/load hl direct
+  case 0x22: m8080_ww(c, m8080_next_word(c), c->hl); break; // shld word
+  case 0x2a: c->hl = m8080_rw(c, m8080_next_word(c)); break; // lhld word
 
   // load program counter
-  case 0xe9: c->pc = c->hl; break; // PCHL
+  case 0xe9: c->pc = c->hl; break; // pchl
 
   // jump instructions
-  case 0xc3: c->pc = m8080_next_word(c); break; // JMP word
-  case 0xcb: c->pc = m8080_next_word(c); break; // JMP word
-  case 0xda: m8080_cond_jmp(c, c->f.c == 1); break; // JC word
-  case 0xd2: m8080_cond_jmp(c, c->f.c == 0); break; // JNC word
-  case 0xca: m8080_cond_jmp(c, c->f.z == 1); break; // JZ word
-  case 0xc2: m8080_cond_jmp(c, c->f.z == 0); break; // JNZ word
-  case 0xfa: m8080_cond_jmp(c, c->f.s == 1); break; // JM word
-  case 0xf2: m8080_cond_jmp(c, c->f.s == 0); break; // JP word
-  case 0xea: m8080_cond_jmp(c, c->f.p == 1); break; // JPE word
-  case 0xe2: m8080_cond_jmp(c, c->f.p == 0); break; // JPO word
+  case 0xc3: c->pc = m8080_next_word(c); break; // jmp word
+  case 0xcb: c->pc = m8080_next_word(c); break; // jmp word
+  case 0xda: m8080_cond_jmp(c, c->f.c == 1); break; // jc word
+  case 0xd2: m8080_cond_jmp(c, c->f.c == 0); break; // jnc word
+  case 0xca: m8080_cond_jmp(c, c->f.z == 1); break; // jz word
+  case 0xc2: m8080_cond_jmp(c, c->f.z == 0); break; // jnz word
+  case 0xfa: m8080_cond_jmp(c, c->f.s == 1); break; // jm word
+  case 0xf2: m8080_cond_jmp(c, c->f.s == 0); break; // jp word
+  case 0xea: m8080_cond_jmp(c, c->f.p == 1); break; // jpe word
+  case 0xe2: m8080_cond_jmp(c, c->f.p == 0); break; // jpo word
 
   // call subroutine instructions
-  case 0xcd: m8080_call(c, m8080_next_word(c)); break; // CALL word
-  case 0xdd: m8080_call(c, m8080_next_word(c)); break; // CALL word
-  case 0xed: m8080_call(c, m8080_next_word(c)); break; // CALL word
-  case 0xfd: m8080_call(c, m8080_next_word(c)); break; // CALL word
-  case 0xdc: m8080_cond_call(c, c->f.c == 1); break; // CC word
-  case 0xd4: m8080_cond_call(c, c->f.c == 0); break; // CNC word
-  case 0xcc: m8080_cond_call(c, c->f.z == 1); break; // CZ word
-  case 0xc4: m8080_cond_call(c, c->f.z == 0); break; // CNZ word
-  case 0xfc: m8080_cond_call(c, c->f.s == 1); break; // CM word
-  case 0xf4: m8080_cond_call(c, c->f.s == 0); break; // CP word
-  case 0xec: m8080_cond_call(c, c->f.p == 1); break; // CPE word
-  case 0xe4: m8080_cond_call(c, c->f.p == 0); break; // CPO word
+  case 0xcd: m8080_call(c, m8080_next_word(c)); break; // call word
+  case 0xdd: m8080_call(c, m8080_next_word(c)); break; // call word
+  case 0xed: m8080_call(c, m8080_next_word(c)); break; // call word
+  case 0xfd: m8080_call(c, m8080_next_word(c)); break; // call word
+  case 0xdc: m8080_cond_call(c, c->f.c == 1); break; // cc word
+  case 0xd4: m8080_cond_call(c, c->f.c == 0); break; // cnc word
+  case 0xcc: m8080_cond_call(c, c->f.z == 1); break; // cz word
+  case 0xc4: m8080_cond_call(c, c->f.z == 0); break; // cnz word
+  case 0xfc: m8080_cond_call(c, c->f.s == 1); break; // cm word
+  case 0xf4: m8080_cond_call(c, c->f.s == 0); break; // cp word
+  case 0xec: m8080_cond_call(c, c->f.p == 1); break; // cpe word
+  case 0xe4: m8080_cond_call(c, c->f.p == 0); break; // cpo word
 
   // return from subroutine instructions
-  case 0xc9: c->pc = m8080_pop(c); break; // RET
-  case 0xd9: c->pc = m8080_pop(c); break; // RET
-  case 0xd8: m8080_cond_ret(c, c->f.c == 1); break; // RC
-  case 0xd0: m8080_cond_ret(c, c->f.c == 0); break; // RNC
-  case 0xc8: m8080_cond_ret(c, c->f.z == 1); break; // RZ
-  case 0xc0: m8080_cond_ret(c, c->f.z == 0); break; // RNZ
-  case 0xf8: m8080_cond_ret(c, c->f.s == 1); break; // RM
-  case 0xf0: m8080_cond_ret(c, c->f.s == 0); break; // RP
-  case 0xe8: m8080_cond_ret(c, c->f.p == 1); break; // RPE
-  case 0xe0: m8080_cond_ret(c, c->f.p == 0); break; // RPO
+  case 0xc9: c->pc = m8080_pop(c); break; // ret
+  case 0xd9: c->pc = m8080_pop(c); break; // ret
+  case 0xd8: m8080_cond_ret(c, c->f.c == 1); break; // rc
+  case 0xd0: m8080_cond_ret(c, c->f.c == 0); break; // rnc
+  case 0xc8: m8080_cond_ret(c, c->f.z == 1); break; // rz
+  case 0xc0: m8080_cond_ret(c, c->f.z == 0); break; // rnz
+  case 0xf8: m8080_cond_ret(c, c->f.s == 1); break; // rm
+  case 0xf0: m8080_cond_ret(c, c->f.s == 0); break; // rp
+  case 0xe8: m8080_cond_ret(c, c->f.p == 1); break; // rpe
+  case 0xe0: m8080_cond_ret(c, c->f.p == 0); break; // rpo
 
   // restart instructions
-  case 0xc7: m8080_call(c, 0x00); break; // RST 0
-  case 0xcf: m8080_call(c, 0x08); break; // RST 1
-  case 0xd7: m8080_call(c, 0x10); break; // RST 2
-  case 0xdf: m8080_call(c, 0x18); break; // RST 3
-  case 0xe7: m8080_call(c, 0x20); break; // RST 4
-  case 0xef: m8080_call(c, 0x28); break; // RST 5
-  case 0xf7: m8080_call(c, 0x30); break; // RST 6
-  case 0xff: m8080_call(c, 0x38); break; // RST 7
+  case 0xc7: m8080_call(c, M8080_RST_0); break; // rst 0
+  case 0xcf: m8080_call(c, M8080_RST_1); break; // rst 1
+  case 0xd7: m8080_call(c, M8080_RST_2); break; // rst 2
+  case 0xdf: m8080_call(c, M8080_RST_3); break; // rst 3
+  case 0xe7: m8080_call(c, M8080_RST_4); break; // rst 4
+  case 0xef: m8080_call(c, M8080_RST_5); break; // rst 5
+  case 0xf7: m8080_call(c, M8080_RST_6); break; // rst 6
+  case 0xff: m8080_call(c, M8080_RST_7); break; // rst 7
 
   // interrupt flip-flop instructions
-  case 0xfb: c->inte = 1; break; // EI
-  case 0xf3: c->inte = 0; break; // DI
+  case 0xfb: c->inte = 1; break; // ei
+  case 0xf3: c->inte = 0; break; // di
 
   // input/output instructions (user-defined)
-  case 0xdb: m8080_in(c, m8080_next_byte(c)); break; // IN byte
-  case 0xd3: m8080_out(c, m8080_next_byte(c)); break; // OUT byte
+  case 0xdb: m8080_in(c, m8080_next_byte(c)); break; // in byte
+  case 0xd3: m8080_out(c, m8080_next_byte(c)); break; // out byte
 
   // halt instruction (user-defined)
   case 0x76: m8080_hlt(c); break; // HLT
