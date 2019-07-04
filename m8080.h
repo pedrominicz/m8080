@@ -341,33 +341,33 @@ int m8080_disassemble(const m8080* const c, const uint16_t pos, const bool b) {
   case 0x1f: I1("rar");
 
   // push data onto stack
-  case 0xc5: I1("push b");
-  case 0xd5: I1("push d");
-  case 0xe5: I1("push h");
+  case 0xc5: I1("push bc");
+  case 0xd5: I1("push de");
+  case 0xe5: I1("push hl");
   case 0xf5: I1("push psw");
 
   // pop data off stack
-  case 0xc1: I1("pop b");
-  case 0xd1: I1("pop d");
-  case 0xe1: I1("pop h");
+  case 0xc1: I1("pop bc");
+  case 0xd1: I1("pop de");
+  case 0xe1: I1("pop hl");
   case 0xf1: I1("pop psw");
 
   // double add
-  case 0x09: I1("dad b");
-  case 0x19: I1("dad d");
-  case 0x29: I1("dad h");
+  case 0x09: I1("dad bc");
+  case 0x19: I1("dad de");
+  case 0x29: I1("dad hl");
   case 0x39: I1("dad sp");
 
   // increment register pair
-  case 0x03: I1("inx b");
-  case 0x13: I1("inx d");
-  case 0x23: I1("inx h");
+  case 0x03: I1("inx bc");
+  case 0x13: I1("inx de");
+  case 0x23: I1("inx hl");
   case 0x33: I1("inx sp");
 
   // decrement register pair
-  case 0x0b: I1("dcx b");
-  case 0x1b: I1("dcx d");
-  case 0x2b: I1("dcx h");
+  case 0x0b: I1("dcx bc");
+  case 0x1b: I1("dcx de");
+  case 0x2b: I1("dcx hl");
   case 0x3b: I1("dcx sp");
 
   // exchange registers
@@ -376,9 +376,9 @@ int m8080_disassemble(const m8080* const c, const uint16_t pos, const bool b) {
   case 0xf9: I1("sphl");
 
   // move immediate word
-  case 0x01: I3("lxi b, 0x%x");
-  case 0x11: I3("lxi d, 0x%x");
-  case 0x21: I3("lxi h, 0x%x");
+  case 0x01: I3("lxi bc, 0x%x");
+  case 0x11: I3("lxi de, 0x%x");
+  case 0x21: I3("lxi hl, 0x%x");
   case 0x31: I3("lxi sp, 0x%x");
 
   // move immediate byte
@@ -899,33 +899,33 @@ size_t m8080_step(m8080* const c) {
   case 0x1f: m8080_rar(c); break; // rar
 
   // push data onto stack
-  case 0xc5: m8080_push(c, c->bc); break; // push b
-  case 0xd5: m8080_push(c, c->de); break; // push d
-  case 0xe5: m8080_push(c, c->hl); break; // push h
+  case 0xc5: m8080_push(c, c->bc); break; // push bc
+  case 0xd5: m8080_push(c, c->de); break; // push de
+  case 0xe5: m8080_push(c, c->hl); break; // push hl
   case 0xf5: m8080_push_psw(c); break; // push psw
 
   // pop data off stack
-  case 0xc1: c->bc = m8080_pop(c); break; // pop b
-  case 0xd1: c->de = m8080_pop(c); break; // pop d
-  case 0xe1: c->hl = m8080_pop(c); break; // pop h
+  case 0xc1: c->bc = m8080_pop(c); break; // pop bc
+  case 0xd1: c->de = m8080_pop(c); break; // pop de
+  case 0xe1: c->hl = m8080_pop(c); break; // pop hl
   case 0xf1: m8080_pop_psw(c); break; // pop psw
 
   // double add
-  case 0x09: c->f.c = (c->hl + c->bc) >> 16; c->hl += c->bc; break; // dad b
-  case 0x19: c->f.c = (c->hl + c->de) >> 16; c->hl += c->de; break; // dad d
-  case 0x29: c->f.c = (c->hl + c->hl) >> 16; c->hl += c->hl; break; // dad h
+  case 0x09: c->f.c = (c->hl + c->bc) >> 16; c->hl += c->bc; break; // dad bc
+  case 0x19: c->f.c = (c->hl + c->de) >> 16; c->hl += c->de; break; // dad de
+  case 0x29: c->f.c = (c->hl + c->hl) >> 16; c->hl += c->hl; break; // dad hl
   case 0x39: c->f.c = (c->hl + c->sp) >> 16; c->hl += c->sp; break; // dad sp
 
   // increment register pair
-  case 0x03: ++c->bc; break; // inx b
-  case 0x13: ++c->de; break; // inx d
-  case 0x23: ++c->hl; break; // inx h
+  case 0x03: ++c->bc; break; // inx bc
+  case 0x13: ++c->de; break; // inx de
+  case 0x23: ++c->hl; break; // inx hl
   case 0x33: ++c->sp; break; // inx sp
 
   // decrement register pair
-  case 0x0b: --c->bc; break; // dcx b
-  case 0x1b: --c->de; break; // dcx d
-  case 0x2b: --c->hl; break; // dcx h
+  case 0x0b: --c->bc; break; // dcx bc
+  case 0x1b: --c->de; break; // dcx de
+  case 0x2b: --c->hl; break; // dcx hl
   case 0x3b: --c->sp; break; // dcx sp
 
   // exchange registers
@@ -934,9 +934,9 @@ size_t m8080_step(m8080* const c) {
   case 0xf9: c->sp = c->hl; break; // sphl
 
   // move immediate word
-  case 0x01: c->bc = m8080_next_word(c); break; // lxi b, word
-  case 0x11: c->de = m8080_next_word(c); break; // lxi d, word
-  case 0x21: c->hl = m8080_next_word(c); break; // lxi h, word
+  case 0x01: c->bc = m8080_next_word(c); break; // lxi bc, word
+  case 0x11: c->de = m8080_next_word(c); break; // lxi de, word
+  case 0x21: c->hl = m8080_next_word(c); break; // lxi hl, word
   case 0x31: c->sp = m8080_next_word(c); break; // lxi sp, word
 
   // move immediate byte

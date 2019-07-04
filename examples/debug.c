@@ -218,7 +218,11 @@ int main(int argc, char** argv) {
           break;
         }
         pos += debug_disassemble(&c, pos, breakpoint[pos]);
-        if(memory[pos] == 0xc9 || memory[pos] == 0xd9) {
+        if(memory[pos] == 0xc9 || memory[pos] == 0xd9 // `ret` and undocumented `ret`
+            || memory[pos] == 0xd8 || memory[pos] == 0xd0 // `rc` and `rnc`
+            || memory[pos] == 0xc8 || memory[pos] == 0xc0 // `rz` and `rnz`
+            || memory[pos] == 0xf8 || memory[pos] == 0xf0 // `rm` and `rp`
+            || memory[pos] == 0xe8 || memory[pos] == 0xe0) { // `rpe` and `rpo`
           debug_disassemble(&c, pos, breakpoint[pos]); // print `ret`
           break;
         }
