@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 enum {
-  NOP = 0,
+  EOL,
   BREAK,
   CONTINUE,
   DISASSEMBLE,
@@ -47,7 +47,7 @@ static inline int read_argument(void) {
   int ch = getchar();
   while(ch == ' ' || ch == '\t') ch = getchar();
   // no optional argument
-  if(ch == '\n') {
+  if(ch == '\n' || ch == ';') {
     ungetc(ch, stdin);
     return 1;
   }
@@ -61,17 +61,18 @@ static inline Command read_command(void) {
   Command cmd = {0};
 
   int ch = getchar();
-  while(ch == ' ' || ch == '\t') ch = getchar();
+  while(ch == ' ' || ch == '\t' || ch == ';') ch = getchar();
 
   switch(ch) {
   case '\n':
-    cmd.type = NOP;
+    cmd.type = EOL;
     return cmd;
   case 'b':
     ch = getchar();
     while(ch == ' ' || ch == '\t') ch = getchar();
     if(ch == '\n') { // breakpoint requires one argument
       cmd.type = HELP;
+      ungetc(ch, stdin);
       return cmd;
     }
     ungetc(ch, stdin);
@@ -108,17 +109,32 @@ static inline Command read_command(void) {
   // eat all characters until end of line
   while(1) {
     ch = getchar();
-    if(ch == EOF || ch == '\n') return cmd;
+    if(ch == EOF || ch == '\n' || ch == ';') {
+      ungetc(ch, stdin);
+      return cmd;
+    }
     if(ch != ' ' && ch != '\t') cmd.type = HELP;
   }
 }
 
 static inline int debug_disassemble(const m8080* const c, const uint16_t pos, const bool b) {
   int ret = m8080_disassemble(c, pos, b);
-  if(m8080_rb(c, pos) == 0xcd
-      && m8080_rb(c, pos + 1) == 0x05
-      && m8080_rb(c, pos + 2) == 0x00) {
-    printf("\t; special print function");
+  switch(m8080_rb(c, pos)) {
+  case 0xcd: // call
+  case 0xdd: // call (undocumented)
+  case 0xed: // call (undocumented)
+  case 0xfd: // call (undocumented)
+  case 0xdc: // cc
+  case 0xd4: // cnc
+  case 0xcc: // cz
+  case 0xc4: // cnz
+  case 0xfc: // cm
+  case 0xf4: // cp
+  case 0xec: // cpe
+  case 0xe4: // cpo
+    if(m8080_rb(c, pos + 1) == 0x05 && m8080_rb(c, pos + 2) == 0x00) {
+      printf("\t; special print function");
+    }
   }
   putchar('\n');
   return ret;
@@ -184,97 +200,101 @@ int main(int argc, char** argv) {
 
   while(1) {
     printf("[0x%04x]> ", c.pc);
-    const Command cmd = read_command();
 
-    switch(cmd.type) {
-    case NOP: break;
-    case BREAK:
-      breakpoint[cmd.data] = !breakpoint[cmd.data];
-      printf("%s breakpoint at 0x%04x\n",
-          breakpoint[cmd.data] ? "added" : "removed",
-          cmd.data);
-      break;
-    case CONTINUE:
-      while(memory[c.pc] != 0x76) {
-        if(breakpoint[c.pc]) break;
-        debug_step(&c);
-      }
-      break;
-    case DISASSEMBLE: {
-      size_t pos = c.pc;
-      for(size_t i = 0; i < cmd.data; ++i) {
-        if(pos >= 0x10000) {
-          printf("EOF\n");
-          break;
+    Command cmd;
+    do {
+      cmd = read_command();
+
+      switch(cmd.type) {
+      case EOL: break;
+      case BREAK:
+                breakpoint[cmd.data] = !breakpoint[cmd.data];
+                printf("%s breakpoint at 0x%04x\n",
+                    breakpoint[cmd.data] ? "added" : "removed",
+                    cmd.data);
+                break;
+      case CONTINUE:
+                while(memory[c.pc] != 0x76) {
+                  if(breakpoint[c.pc]) break;
+                  debug_step(&c);
+                }
+                break;
+      case DISASSEMBLE: {
+        size_t pos = c.pc;
+        for(size_t i = 0; i < cmd.data; ++i) {
+          if(pos >= 0x10000) {
+            printf("EOF\n");
+            break;
+          }
+          pos += debug_disassemble(&c, pos, breakpoint[pos]);
         }
-        pos += debug_disassemble(&c, pos, breakpoint[pos]);
-      }
-    } break;
-    case DISASSEMBLE_FUNCTION: {
-      size_t pos = c.pc;
-      for(size_t i = 0; i < 16; ++i) {
-        if(pos >= 0x10000) {
-          printf("EOF\n");
-          break;
+      } break;
+      case DISASSEMBLE_FUNCTION: {
+        size_t pos = c.pc;
+        for(size_t i = 0; i < 16; ++i) {
+          if(pos >= 0x10000) {
+            printf("EOF\n");
+            break;
+          }
+          pos += debug_disassemble(&c, pos, breakpoint[pos]);
+          if(memory[pos] == 0xc9 || memory[pos] == 0xd9 // `ret` and undocumented `ret`
+              || memory[pos] == 0xd8 || memory[pos] == 0xd0 // `rc` and `rnc`
+              || memory[pos] == 0xc8 || memory[pos] == 0xc0 // `rz` and `rnz`
+              || memory[pos] == 0xf8 || memory[pos] == 0xf0 // `rm` and `rp`
+              || memory[pos] == 0xe8 || memory[pos] == 0xe0) { // `rpe` and `rpo`
+            debug_disassemble(&c, pos, breakpoint[pos]); // print `ret`
+            break;
+          }
         }
-        pos += debug_disassemble(&c, pos, breakpoint[pos]);
-        if(memory[pos] == 0xc9 || memory[pos] == 0xd9 // `ret` and undocumented `ret`
-            || memory[pos] == 0xd8 || memory[pos] == 0xd0 // `rc` and `rnc`
-            || memory[pos] == 0xc8 || memory[pos] == 0xc0 // `rz` and `rnz`
-            || memory[pos] == 0xf8 || memory[pos] == 0xf0 // `rm` and `rp`
-            || memory[pos] == 0xe8 || memory[pos] == 0xe0) { // `rpe` and `rpo`
-          debug_disassemble(&c, pos, breakpoint[pos]); // print `ret`
-          break;
-        }
+      } break;
+      case PRINT_REGISTERS:
+                print_registers(&c);
+                break;
+      case QUIT:
+                printf("quit\n");
+                return 0;
+      case STEP:
+                for(size_t i = 0; i < cmd.data; ++i) {
+                  debug_step(&c);
+                }
+                break;
+      case HELP:
+      default:
+                printf("usage: [command] [option]\n");
+                printf("| b [pos]   toggle breakpoint at pos\n");
+                printf("| c         continue until breakpoint or halt\n");
+                printf("| d         disassemble next instruction\n");
+                printf("| d [count] disassemble count instructions\n");
+                printf("| f         disassemble until return instruction\n");
+                printf("| h         print this help message\n");
+                printf("| p         print registers\n");
+                printf("| s         step one instruction\n");
+                printf("| s [count] step count instructions\n");
+                break;
       }
-    } break;
-    case PRINT_REGISTERS:
-      print_registers(&c);
-      break;
-    case QUIT:
-      printf("quit\n");
-      return 0;
-    case STEP:
-      for(size_t i = 0; i < cmd.data; ++i) {
-        debug_step(&c);
-      }
-      break;
-    case HELP:
-    default:
-      printf("usage: [command] [option]\n");
-      printf("| b [pos]   toggle breakpoint at pos\n");
-      printf("| c         continue until breakpoint or halt\n");
-      printf("| d         disassemble next instruction\n");
-      printf("| d [count] disassemble count instructions\n");
-      printf("| f         disassemble until return instruction\n");
-      printf("| h         print this help message\n");
-      printf("| p         print registers\n");
-      printf("| s         step one instruction\n");
-      printf("| s [count] step count instructions\n");
-      break;
-    }
+    } while(cmd.type != EOL && cmd.type != QUIT);
   }
 }
 
 /*
-MIT License
-Copyright (c) 2019 Pedro Minicz
+   MIT License
+   Copyright (c) 2019 Pedro Minicz
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
+   Permission is hereby granted, free of charge, to any person obtaining a copy of
+   this software and associated documentation files (the "Software"), to deal in
+   the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+   of the Software, and to permit persons to whom the Software is furnished to do
+   so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+   */
