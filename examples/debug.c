@@ -208,17 +208,24 @@ int main(int argc, char** argv) {
       switch(cmd.type) {
       case EOL: break;
       case BREAK:
-                breakpoint[cmd.data] = !breakpoint[cmd.data];
-                printf("%s breakpoint at 0x%04x\n",
-                    breakpoint[cmd.data] ? "added" : "removed",
-                    cmd.data);
-                break;
+        breakpoint[cmd.data] = !breakpoint[cmd.data];
+        printf("%s breakpoint at 0x%04x\n",
+            breakpoint[cmd.data] ? "added" : "removed",
+            cmd.data);
+        break;
       case CONTINUE:
-                while(memory[c.pc] != 0x76) {
-                  if(breakpoint[c.pc]) break;
-                  debug_step(&c);
-                }
-                break;
+        for(;;) {
+          if(m8080_rb(&c, c.pc) == 0x76) {
+            printf("hit halt instruction at 0x%04x\n", c.pc);
+            break;
+          }
+          if(breakpoint[c.pc]) {
+            printf("hit breakpoint at 0x%04x\n", c.pc);
+            break;
+          }
+          debug_step(&c);
+        }
+        break;
       case DISASSEMBLE: {
         size_t pos = c.pc;
         for(size_t i = 0; i < cmd.data; ++i) {
@@ -249,29 +256,29 @@ int main(int argc, char** argv) {
         }
       } break;
       case PRINT_REGISTERS:
-                print_registers(&c);
-                break;
+        print_registers(&c);
+        break;
       case QUIT:
-                printf("quit\n");
-                return 0;
+        printf("quit\n");
+        return 0;
       case STEP:
-                for(size_t i = 0; i < cmd.data; ++i) {
-                  debug_step(&c);
-                }
-                break;
+        for(size_t i = 0; i < cmd.data; ++i) {
+          debug_step(&c);
+        }
+        break;
       case HELP:
       default:
-                printf("usage: [command] [option]\n");
-                printf("| b [pos]   toggle breakpoint at pos\n");
-                printf("| c         continue until breakpoint or halt\n");
-                printf("| d         disassemble next instruction\n");
-                printf("| d [count] disassemble count instructions\n");
-                printf("| f         disassemble until return instruction\n");
-                printf("| h         print this help message\n");
-                printf("| p         print registers\n");
-                printf("| s         step one instruction\n");
-                printf("| s [count] step count instructions\n");
-                break;
+        printf("usage: [command] [option]\n");
+        printf("| b [pos]   toggle breakpoint at pos\n");
+        printf("| c         continue until breakpoint or halt\n");
+        printf("| d         disassemble next instruction\n");
+        printf("| d [count] disassemble count instructions\n");
+        printf("| f         disassemble until return instruction\n");
+        printf("| h         print this help message\n");
+        printf("| p         print registers\n");
+        printf("| s         step one instruction\n");
+        printf("| s [count] step count instructions\n");
+        break;
       }
     } while(cmd.type != EOL && cmd.type != QUIT);
   }
