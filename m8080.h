@@ -65,10 +65,22 @@ size_t m8080_interrupt(m8080* const c, const uint16_t a);
 
 // the user is expected to implement the following five functions
 
-// read byte in memory address A
+// read byte
 uint8_t m8080_rb(const m8080* const c, const uint16_t a);
-// write byte B to memory address A
+// write byte
 void m8080_wb(m8080* const c, const uint16_t a, const uint8_t b);
+
+// read word
+static inline uint16_t m8080_rw(const m8080* const c, const uint16_t a) {
+  return m8080_rb(c, a + 1) << 8 | m8080_rb(c, a);
+}
+
+// write word
+static inline uint16_t m8080_ww(m8080* const c, const uint16_t a, const uint16_t w) {
+  m8080_wb(c, a + 0, w);
+  m8080_wb(c, a + 1, w >> 8);
+  return m8080_rw(c, a);
+}
 
 // the contents of input device A are read into the accumulator
 void m8080_in(m8080* const c, const uint8_t a);
@@ -116,18 +128,6 @@ static const uint8_t m8080_parity[] = {
   1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0, // c0..df
   0,1,1,0,1,0,0,1,1,0,0,1,0,1,1,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,0,1, // e0..ff
 };
-
-// read word
-static inline uint16_t m8080_rw(const m8080* const c, const uint16_t a) {
-  return m8080_rb(c, a + 1) << 8 | m8080_rb(c, a);
-}
-
-// write word
-static inline uint16_t m8080_ww(m8080* const c, const uint16_t a, const uint16_t w) {
-  m8080_wb(c, a + 0, w);
-  m8080_wb(c, a + 1, w >> 8);
-  return m8080_rw(c, a);
-}
 
 int m8080_disassemble(const m8080* const c, const uint16_t pos, const bool b) {
   const uint8_t opcode = m8080_rb(c, pos);

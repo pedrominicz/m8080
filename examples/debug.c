@@ -132,7 +132,7 @@ static inline int debug_disassemble(const m8080* const c, const uint16_t pos, co
   case 0xf4: // cp
   case 0xec: // cpe
   case 0xe4: // cpo
-    if(m8080_rb(c, pos + 1) == 0x05 && m8080_rb(c, pos + 2) == 0x00) {
+    if(m8080_rw(c, pos + 1) == 0x0005) {
       printf("\t; special print function");
     }
   }
@@ -237,11 +237,12 @@ int main(int argc, char** argv) {
             break;
           }
           pos += debug_disassemble(&c, pos, breakpoint[pos]);
-          if(memory[pos] == 0xc9 || memory[pos] == 0xd9 // `ret` and undocumented `ret`
-              || memory[pos] == 0xd8 || memory[pos] == 0xd0 // `rc` and `rnc`
-              || memory[pos] == 0xc8 || memory[pos] == 0xc0 // `rz` and `rnz`
-              || memory[pos] == 0xf8 || memory[pos] == 0xf0 // `rm` and `rp`
-              || memory[pos] == 0xe8 || memory[pos] == 0xe0) { // `rpe` and `rpo`
+          uint8_t opcode = m8080_rb(&c, pos);
+          if(opcode == 0xc9 || opcode == 0xd9 // `ret` and undocumented `ret`
+              || opcode == 0xd8 || opcode == 0xd0 // `rc` and `rnc`
+              || opcode == 0xc8 || opcode == 0xc0 // `rz` and `rnz`
+              || opcode == 0xf8 || opcode == 0xf0 // `rm` and `rp`
+              || opcode == 0xe8 || opcode == 0xe0) { // `rpe` and `rpo`
             debug_disassemble(&c, pos, breakpoint[pos]); // print `ret`
             break;
           }
