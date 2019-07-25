@@ -214,6 +214,7 @@ int main(int argc, char** argv) {
             cmd.data);
         break;
       case CONTINUE:
+        debug_step(&c);
         for(;;) {
           if(m8080_rb(&c, c.pc) == 0x76) {
             printf("hit halt instruction at 0x%04x\n", c.pc);
