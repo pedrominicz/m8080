@@ -96,7 +96,7 @@ void map(const m8080* const c, size_t pos, uint8_t* const memory_map) {
 }
 
 int main(int argc, char** argv) {
-  if(argc < 2) {
+  if(argc != 2) {
     fprintf(stderr, "usage: %s file\n", argv[0]);
     return 1;
   }
