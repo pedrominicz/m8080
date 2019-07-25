@@ -45,17 +45,17 @@ void m8080_hlt(m8080* const c) {
 
 void map(const m8080* const c, size_t pos, uint8_t* const memory_map) {
   while(pos < 0x10000) {
-    if(memory_map[pos]) break;
+    if(memory_map[pos] >= 3) break;
 
     const size_t l = length[m8080_rb(c, pos)];
 
-    if(l >= 3) memory_map[pos + 2] = 3;
-    if(l >= 2) memory_map[pos + 1] = 2;
-    if(l >= 1) memory_map[pos + 0] = 1;
+    if(l >= 3) memory_map[pos + 2] += 1;
+    if(l >= 2) memory_map[pos + 1] += 1;
+    if(l >= 1) memory_map[pos + 0] += 3;
 
     switch(m8080_rb(c, pos)) {
-    case 0xc3: // jmp word
-    case 0xcb: // jmp word (undocumented)
+    case 0xc3: // jmp
+    case 0xcb: // jmp (undocumented)
       if(m8080_rw(c, pos + 1) >= c->pc) {
         pos = m8080_rw(c, pos + 1);
         continue;
@@ -66,26 +66,26 @@ void map(const m8080* const c, size_t pos, uint8_t* const memory_map) {
     case 0x76: // hlt
       return;
 
-    case 0xda: // jc word
-    case 0xd2: // jnc word
-    case 0xca: // jz word
-    case 0xc2: // jnz word
-    case 0xfa: // jm word
-    case 0xf2: // jp word
-    case 0xea: // jpe word
-    case 0xe2: // jpo word
-    case 0xcd: // call word
-    case 0xdd: // call word (undocumented)
-    case 0xed: // call word (undocumented)
-    case 0xfd: // call word (undocumented)
-    case 0xdc: // cc word
-    case 0xd4: // cnc word
-    case 0xcc: // cz word
-    case 0xc4: // cnz word
-    case 0xfc: // cm word
-    case 0xf4: // cp word
-    case 0xec: // cpe word
-    case 0xe4: // cpo word
+    case 0xda: // jc
+    case 0xd2: // jnc
+    case 0xca: // jz
+    case 0xc2: // jnz
+    case 0xfa: // jm
+    case 0xf2: // jp
+    case 0xea: // jpe
+    case 0xe2: // jpo
+    case 0xcd: // call
+    case 0xdd: // call (undocumented)
+    case 0xed: // call (undocumented)
+    case 0xfd: // call (undocumented)
+    case 0xdc: // cc
+    case 0xd4: // cnc
+    case 0xcc: // cz
+    case 0xc4: // cnz
+    case 0xfc: // cm
+    case 0xf4: // cp
+    case 0xec: // cpe
+    case 0xe4: // cpo
       if(m8080_rw(c, pos + 1) >= c->pc)
         map(c, m8080_rw(c, pos + 1), memory_map);
       break;
@@ -119,8 +119,8 @@ int main(int argc, char** argv) {
 
   size_t next = c.pc;
   for(size_t i = c.pc; i < 0x10000; ++i) {
-    if(memory_map[i] == 1) {
-      if(i < next) puts("warning: misaligned instructions!");
+    if(memory_map[i] >= 3) {
+      if(memory_map[i] > 3) puts("warning: misaligned instruction!");
       if(i > next) puts("...");
       next = i + m8080_disassemble(&c, i, false);
       putchar('\n');
