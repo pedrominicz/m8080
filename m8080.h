@@ -247,12 +247,12 @@ int m8080_disassemble(const m8080* const c, const uint16_t pos, const bool b) {
   case 0x7f: I1("mov a, a");
 
   // store accumulator
-  case 0x02: I1("stax b");
-  case 0x12: I1("stax d");
+  case 0x02: I1("stax bc");
+  case 0x12: I1("stax de");
 
   // load accumulator
-  case 0x0a: I1("ldax b");
-  case 0x1a: I1("ldax d");
+  case 0x0a: I1("ldax bc");
+  case 0x1a: I1("ldax de");
 
   // add register or memory to accumulator
   case 0x80: I1("add b");
@@ -805,12 +805,12 @@ size_t m8080_step(m8080* const c) {
   case 0x7f: c->a = c->a; break; // mov a, a
 
   // store accumulator
-  case 0x02: m8080_wb(c, c->bc, c->a); break; // stax b
-  case 0x12: m8080_wb(c, c->de, c->a); break; // stax d
+  case 0x02: m8080_wb(c, c->bc, c->a); break; // stax bc
+  case 0x12: m8080_wb(c, c->de, c->a); break; // stax de
 
   // load accumulator
-  case 0x0a: c->a = m8080_rb(c, c->bc); break; // ldax b
-  case 0x1a: c->a = m8080_rb(c, c->de); break; // ldax d
+  case 0x0a: c->a = m8080_rb(c, c->bc); break; // ldax bc
+  case 0x1a: c->a = m8080_rb(c, c->de); break; // ldax de
 
   // add register or memory to accumulator
   case 0x80: m8080_add(c, c->b); break; // add b
