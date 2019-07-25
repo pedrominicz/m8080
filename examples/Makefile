@@ -2,9 +2,12 @@ INCLUDES = -I..
 CFLAGS = -pedantic -Wall -O3
 LDFLAGS = -lallegro
 
-all: debug invaders tests
+all: debug disassembler invaders tests
 
 debug: debug.c
+	$(CC) $(INCLUDES) $(CFLAGS) $< -o $@
+
+disassembler: disassembler.c
 	$(CC) $(INCLUDES) $(CFLAGS) $< -o $@
 
 invaders: invaders.c
@@ -14,6 +17,6 @@ tests: tests.c
 	$(CC) $(INCLUDES) $(CFLAGS) $< -o $@
 
 clean:
-	rm -f debug invaders tests
+	rm -f debug disassembler invaders tests
 
 .PHONY: all clean
